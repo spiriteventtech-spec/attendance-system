@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "EventsTrack",
+    "slug": "eventstrack",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0F1E"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.company.eventstrack",
+      "infoPlist": {
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "EventsTrack tracks your location while you are checked in to a work site to verify geofence compliance.",
+        "NSLocationWhenInUseUsageDescription": "EventsTrack uses your location to verify you are inside the work site before checking in.",
+        "NSLocationAlwaysUsageDescription": "EventsTrack monitors your location while checked in to detect if you leave the site.",
+        "UIBackgroundModes": ["location", "fetch"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A0F1E"
+      },
+      "package": "com.company.eventstrack",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "EventsTrack needs location access to verify you are inside the work site and to track your presence during your shift."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
+  }
+}

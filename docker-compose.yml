@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  # ── PostgreSQL + PostGIS ──────────────────────────────────
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: attendance_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: attendance_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_dev_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend API ───────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: attendance_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: attendance_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres_dev_password
+      JWT_SECRET: change_this_in_production_use_a_long_random_value
+      JWT_EXPIRES_IN: 8h
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "3001:3001"
+
+  # ── Admin Dashboard ───────────────────────────────────────
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: attendance_admin
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3002:80"
+
+volumes:
+  postgres_data:
+  uploads_data:

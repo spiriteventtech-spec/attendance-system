@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-main: #F5F5F7;
+    --bg-elevated: #FFFFFF;
+    --brand-primary: #007AFF;
+    --brand-secondary: #5856D6;
+    --brand-success: #34C759;
+    --brand-warning: #FF9500;
+    --brand-danger: #FF3B30;
+    --text-primary: #1D1D1F;
+    --text-secondary: #86868B;
+    --border-soft: rgba(0, 0, 0, 0.05);
+    --shadow-premium: 0 4px 24px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark {
+    --bg-main: #000000;
+    --bg-elevated: #1C1C1E;
+    --text-primary: #F5F5F7;
+    --text-secondary: #86868B;
+    --border-soft: rgba(255, 255, 255, 0.1);
+    --shadow-premium: 0 4px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.022em;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { 
+    background: rgba(0, 0, 0, 0.1); 
+    border-radius: 10px;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-2xl border border-white/20 rounded-2xl
+           shadow-premium transition-all duration-300;
+  }
+
+  .premium-card {
+    @apply bg-white rounded-2xl p-6 shadow-premium border border-black/[0.03] transition-all duration-300 hover:shadow-2xl;
+  }
+
+  .btn-apple {
+    @apply bg-[#007AFF] text-white px-5 py-2.5 rounded-full font-semibold text-sm
+           transition-all duration-200 active:scale-95 disabled:opacity-50
+           flex items-center justify-center gap-2 shadow-sm hover:brightness-110;
+  }
+
+  .btn-apple-secondary {
+    @apply bg-black/5 text-[#007AFF] px-5 py-2.5 rounded-full font-semibold text-sm
+           transition-all duration-200 active:scale-95 hover:bg-black/10;
+  }
+
+  .input-apple {
+    @apply bg-black/[0.03] border border-transparent rounded-xl px-4 py-3 text-sm
+           text-[#1D1D1F] placeholder-black/30 focus:outline-none focus:bg-white
+           focus:border-[#007AFF]/20 focus:ring-4 focus:ring-[#007AFF]/5 transition-all duration-200 w-full;
+  }
+
+  .telemetry-label {
+    @apply text-[11px] font-semibold tracking-tight text-[#86868B] mb-1 block uppercase;
+  }
+
+  .telemetry-value {
+    @apply text-2xl font-bold tracking-tight text-[#1D1D1F];
+  }
+}
+
+/* Leaflet Custom Theme Overlay */
+.leaflet-container {
+  background: var(--bg-void) !important;
+}
+
+.leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+.leaflet-bar a {
+  background-color: rgba(0,0,0,0.8) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
