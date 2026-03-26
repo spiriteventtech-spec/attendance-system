@@ -57,6 +57,16 @@ app.get('/health', (req, res) => res.json({
   timestamp: new Date().toISOString(),
 }));
 
+app.get('/api/db-health', async (req, res) => {
+  try {
+    const { rows } = await query('SELECT NOW()');
+    res.json({ status: 'ok', now: rows[0].now });
+  } catch (err) {
+    console.error('DB Health Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Routes ────────────────────────────────────────────────────
 app.use('/api',             authRoutes);
 app.use('/api/attendance',  attendanceRoutes);
