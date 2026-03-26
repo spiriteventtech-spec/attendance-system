@@ -8,7 +8,9 @@ const pool = new Pool({
   database: process.env.DB_NAME     || 'attendance_db',
   user:     process.env.DB_USER     || 'postgres',
   password: process.env.DB_PASSWORD || '',
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  ssl: (process.env.DATABASE_URL || process.env.DB_SSL === 'true') 
+    ? { rejectUnauthorized: false } 
+    : false,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
