@@ -23,10 +23,20 @@ app.set('trust proxy', 1);
 
 // ── Security & Parsing ───────────────────────────────────────
 app.use(helmet());
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*'];
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf('*') !== -1 || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
@@ -88,5 +98,6 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`\n🚀 Attendance API running on http://localhost:${PORT}`);
   console.log(`   ENV: ${process.env.NODE_ENV}`);
-  console.log(`   DB:  ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}\n`);
+  console.log(`   CORS: ${allowedOrigins.join(',')}`);
+  console.log(`   DB:  ${process.env.DATABASE_URL ? 'USING DATABASE_URL' : 'USING DIRECT ENV'}\n`);
 });
