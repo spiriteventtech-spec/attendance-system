@@ -13,6 +13,7 @@ const locationRoutes   = require('./routes/location');
 const userRoutes       = require('./routes/users');
 const reportRoutes     = require('./routes/reports');
 const announcementRoutes = require('./routes/announcements');
+const { query } = require('./config/db');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
