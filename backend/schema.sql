@@ -197,6 +197,8 @@ CREATE TABLE announcements (
     message     TEXT NOT NULL,
     priority    VARCHAR(20) NOT NULL DEFAULT 'general' 
                 CHECK (priority IN ('general', 'important', 'urgent')),
+    target_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    target_site_id UUID REFERENCES projects_sites(id) ON DELETE SET NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
