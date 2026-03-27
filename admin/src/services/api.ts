@@ -123,3 +123,14 @@ export const securityAPI = {
     api.delete(`/security/users/${userId}/device`),
 };
 
+export const shiftsAPI = {
+  list: (params?: Record<string, any>) => 
+    api.get('/shifts', { params }),
+  create: (shift: { userId: string, siteId: string, startTime: string, endTime: string }) => 
+    api.post('/shifts', shift),
+  delete: (id: string) => 
+    api.delete(`/shifts/${id}`),
+  getMyShifts: () => 
+    api.get('/shifts/my'),
+};
+

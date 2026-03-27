@@ -46,12 +46,27 @@ router.post('/checkin', authenticate, [
     if (existing.rows.length)
       return res.status(400).json({ error: 'You already have an active check-in. Please check out first.' });
 
-    // 3. Create attendance log
+    // 3. Find applicable shift (optional but recommended)
+    // Looking for a shift at this site for this user that starts +/- 2 hours from now
+    const shiftCheck = await query(`
+      SELECT id FROM shifts
+      WHERE user_id = $1 AND site_id = $2 AND status = 'scheduled'
+      AND start_time BETWEEN NOW() - INTERVAL '2 hours' AND NOW() + INTERVAL '2 hours'
+      LIMIT 1
+    `, [req.user.id, siteId]);
+    const shiftId = shiftCheck.rows[0]?.id || null;
+
+    // 4. Create attendance log
     const { rows } = await query(`
-      INSERT INTO attendance_logs (user_id, site_id, check_in_time, check_in_note, status)
-      VALUES ($1, $2, NOW(), $3, 'active')
+      INSERT INTO attendance_logs (user_id, site_id, shift_id, check_in_time, check_in_note, status)
+      VALUES ($1, $2, $3, NOW(), $4, 'active')
       RETURNING id, check_in_time, check_in_note, status
-    `, [req.user.id, siteId, note]);
+    `, [req.user.id, siteId, shiftId, note]);
+
+    // Update shift status if linked
+    if (shiftId) {
+      await query("UPDATE shifts SET status = 'in_progress', updated_at = NOW() WHERE id = $1", [shiftId]);
+    }
 
     res.status(201).json({
       message: 'Checked in successfully',
@@ -103,8 +118,13 @@ router.post('/checkout', authenticate, [
       UPDATE attendance_logs
       SET check_out_time = NOW(), check_out_note = $1
       WHERE id = $2
-      RETURNING id, check_in_time, check_out_time, total_hours_worked, total_away_minutes, status
+      RETURNING id, shift_id, check_in_time, check_out_time, total_hours_worked, total_away_minutes, status
     `, [note, log.id]);
+
+    // 4. Update linked shift if applicable
+    if (rows[0].shift_id) {
+        await query("UPDATE shifts SET status = 'completed', updated_at = NOW() WHERE id = $1", [rows[0].shift_id]);
+    }
 
     res.json({
       message: 'Checked out successfully',

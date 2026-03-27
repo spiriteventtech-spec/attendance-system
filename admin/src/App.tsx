@@ -22,6 +22,7 @@ const AnnouncementsPage  = React.lazy(() => import('./pages/AnnouncementsPage'))
 const PersonalDashboard  = React.lazy(() => import('./pages/PersonalDashboard'));
 const PersonalHistory    = React.lazy(() => import('./pages/PersonalHistory'));
 const SecurityAuditPage  = React.lazy(() => import('./pages/SecurityAuditPage'));
+const SchedulingPage     = React.lazy(() => import('./pages/SchedulingPage'));
 
 import { Outlet } from 'react-router-dom';
 
@@ -118,6 +119,7 @@ export default function App() {
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/reports"       element={<ReportsPage />} />
             <Route path="/security"      element={<SecurityAuditPage />} />
+            <Route path="/scheduling"    element={<SchedulingPage />} />
           </Route>
           
           {/* Staff Restricted Section */}

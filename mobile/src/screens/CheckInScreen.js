@@ -35,7 +35,7 @@ import {
   ShieldCheck, Navigation, Activity, Clock, MapPin, Wifi, Zap, LogOut,
   Target, ChevronRight, QrCode, Camera, CheckCircle, XCircle, Fingerprint
 } from 'lucide-react-native';
-import { attendanceAPI, locationAPI, securityAPI } from '../services/api';
+import { attendanceAPI, locationAPI, securityAPI, shiftsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const { width, height } = Dimensions.get('window');
@@ -109,6 +109,10 @@ export default function CheckInScreen() {
   const [qrScanned,      setQrScanned]      = useState(false);
   const [qrSubmitting,   setQrSubmitting]   = useState(false);
 
+  // Shift info
+  const [nextShift,      setNextShift]      = useState(null);
+  const [isRefreshing,   setIsRefreshing]   = useState(false);
+
   // Animations
   const radarPulse  = useSharedValue(0);
   const scanLine    = useSharedValue(0);
@@ -117,6 +121,7 @@ export default function CheckInScreen() {
 
   useEffect(() => {
     init();
+    loadNextShift();
     radarPulse.value = withRepeat(withTiming(1, { duration: 3000 }), -1, false);
     scanLine.value   = withRepeat(withTiming(1, { duration: 4000 }), -1, false);
     selfieGlow.value = withRepeat(withTiming(1, { duration: 1500 }), -1, true);
@@ -163,9 +168,24 @@ export default function CheckInScreen() {
           console.warn('Foreground polling error:', e);
         }
       }, POLL_INTERVAL);
+    } else {
+      // Not checked in - refresh next shift occasionally
+      loadNextShift();
     }
     return () => clearInterval(interval);
   }, [activeLog, isInside]);
+
+  const loadNextShift = async () => {
+    try {
+      const { data: shifts } = await shiftsAPI.getMyShifts();
+      const upcoming = shifts
+        .filter(s => new Date(s.start_time) > new Date() || s.status === 'scheduled')
+        .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))[0];
+      setNextShift(upcoming);
+    } catch (e) {
+      console.error('Failed to load next shift:', e);
+    }
+  };
 
   const init = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -515,6 +535,30 @@ export default function CheckInScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* NEXT SHIFT INTEL */}
+      {nextShift && !activeLog && (
+        <View style={styles.nextShiftContainer}>
+           <View style={styles.glassBackground} />
+           <View style={styles.nextShiftContent}>
+              <View style={styles.nextShiftIcon}>
+                 <Calendar size={14} color="#00F5FF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                 <Text style={styles.nextShiftLabel}>UPCOMING_ASSIGNMENT</Text>
+                 <Text style={styles.nextShiftValue}>{nextShift.site_name}</Text>
+              </View>
+              <View style={{ alignItems: 'right' }}>
+                 <Text style={styles.nextShiftTime}>
+                    {new Date(nextShift.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                 </Text>
+                 <Text style={styles.nextShiftDate}>
+                    {new Date(nextShift.start_time).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                 </Text>
+              </View>
+           </View>
+        </View>
+      )}
+
       {/* TELEMETRY ANALYTICS */}
       <View style={styles.telemetryArea}>
         <View style={styles.telemetryRow}>
@@ -840,4 +884,58 @@ const styles = StyleSheet.create({
   // QR Modal
   qrModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'flex-end', paddingBottom: 32 },
   qrCard: { backgroundColor: '#0A0A0A', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, borderWidth: 1, borderColor: '#1A1A1A' },
+
+  // Next Shift Styles
+  nextShiftContainer: {
+    position: 'absolute',
+    top: 110,
+    left: 20,
+    right: 20,
+    height: 70,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 245, 255, 0.1)',
+    zIndex: 100,
+  },
+  nextShiftContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  nextShiftIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 245, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nextShiftLabel: {
+    fontSize: 8,
+    fontWeight: '900',
+    color: '#00F5FF',
+    letterSpacing: 1,
+  },
+  nextShiftValue: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFF',
+    marginTop: 2,
+  },
+  nextShiftTime: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#FFF',
+    textAlign: 'right',
+  },
+  nextShiftDate: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: '#4A4A4A',
+    textAlign: 'right',
+    marginTop: 2,
+  },
 });

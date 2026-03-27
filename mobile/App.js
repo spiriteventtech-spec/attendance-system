@@ -12,10 +12,11 @@ import { View, ActivityIndicator } from 'react-native';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginScreen        from './src/screens/LoginScreen';
 import CheckInScreen      from './src/screens/CheckInScreen';
+import ScheduleScreen     from './src/screens/ScheduleScreen';
 import HistoryScreen      from './src/screens/HistoryScreen';
 import ProfileScreen      from './src/screens/ProfileScreen';
 import BiometricGateScreen from './src/screens/BiometricGateScreen';
-import { Radar, History, User } from 'lucide-react-native';
+import { Radar, History, User, Calendar } from 'lucide-react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -42,6 +43,11 @@ function StaffTabs() {
         options={{ 
             tabBarLabel: 'Radar', 
             tabBarIcon: ({ color }) => <Radar size={20} color={color} /> 
+        }} />
+      <Tab.Screen name="Schedule" component={ScheduleScreen}
+        options={{ 
+            tabBarLabel: 'Roster', 
+            tabBarIcon: ({ color }) => <Calendar size={20} color={color} /> 
         }} />
       <Tab.Screen name="History" component={HistoryScreen}
         options={{ 

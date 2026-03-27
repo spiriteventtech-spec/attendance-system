@@ -1,7 +1,7 @@
 // src/components/Sidebar.tsx
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MapPin, ClipboardList, Users, BarChart3, Settings, LogOut, Briefcase, Plus, Megaphone, Shield } from 'lucide-react';
+import { LayoutDashboard, MapPin, ClipboardList, Users, BarChart3, Settings, LogOut, Briefcase, Plus, Megaphone, Shield, Calendar } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuthStore } from '../store/authStore';
 
@@ -13,6 +13,7 @@ const navItems = [
   { to: '/attendance', label: 'Attendance',  icon: ClipboardList,  roles: ['admin'] },
   { to: '/history',    label: 'My History',  icon: ClipboardList,  roles: ['staff'] },
   { to: '/staff',      label: 'Staff',       icon: Users,          roles: ['admin'] },
+  { to: '/scheduling', label: 'Scheduling',  icon: Calendar,       roles: ['admin'] },
   { to: '/sites',      label: 'Sites',       icon: Briefcase,      roles: ['admin'] },
   { to: '/reports',    label: 'Reports',     icon: BarChart3,      roles: ['admin'] },
   { to: '/announcements', label: 'Broadcasts', icon: Megaphone,    roles: ['admin'] },

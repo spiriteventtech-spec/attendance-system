@@ -11,10 +11,10 @@ const authRoutes       = require('./routes/auth');
 const attendanceRoutes = require('./routes/attendance');
 const locationRoutes   = require('./routes/location');
 const userRoutes       = require('./routes/users');
-const reportRoutes     = require('./routes/reports');
-const announcementRoutes = require('./routes/announcements');
 const securityRoutes   = require('./routes/security');
+const shiftRoutes      = require('./routes/shifts');
 const { pruneExpiredNonces } = require('./middleware/replayProtection');
+const { checkLateShifts, markAbsences } = require('./cron/shiftWatcher');
 const { query } = require('./config/db');
 
 const app  = express();
@@ -91,6 +91,7 @@ app.use('/api/admin/users', userRoutes);
 app.use('/api/reports',     reportRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/security',    securityRoutes);  // Zero-Trust security layer
+app.use('/api/shifts',      shiftRoutes);     // Shift scheduling layer
 
 // ── 404 ───────────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ error: `Route ${req.method} ${req.path} not found` }));
@@ -106,8 +107,15 @@ app.listen(PORT, () => {
   console.log(`   ENV: ${process.env.NODE_ENV}`);
   console.log(`   CORS: ${allowedOrigins.join(',')}`);
   console.log(`   DB:  ${process.env.DATABASE_URL ? 'USING DATABASE_URL' : 'USING DIRECT ENV'}`);
-  console.log(`   SECURITY: Zero-Trust Device Binding ACTIVE\n`);
+  console.log(`   SECURITY: Zero-Trust Device Binding ACTIVE`);
+  console.log(`   SCHEDULING: Shift-Based Compliance ENABLED\n`);
 
   // Prune expired nonces every 5 minutes
   setInterval(pruneExpiredNonces, 5 * 60 * 1000);
+
+  // Late Check every 5 minutes
+  setInterval(checkLateShifts, 5 * 60 * 1000);
+  
+  // Absence Check every hour
+  setInterval(markAbsences, 60 * 60 * 1000);
 });
