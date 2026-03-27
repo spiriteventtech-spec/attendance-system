@@ -1,9 +1,10 @@
 // src/pages/StaffPage.tsx
 import React, { useEffect, useState } from 'react';
-import { usersAPI, authAPI } from '../services/api';
+import { usersAPI, authAPI, shiftsAPI, securityAPI } from '../services/api';
 import { Badge, Modal, Spinner, FilterInput, FilterSelect, ConfirmDialog, EmptyState, Skeleton } from '../components/ui';
-import { UserPlus, Search, Lock, Archive, Edit2, RotateCcw, Eye } from 'lucide-react';
+import { UserPlus, Search, Lock, Archive, Edit2, RotateCcw, Eye, Smartphone, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { format, parseISO } from 'date-fns';
 
 export default function StaffPage() {
   const [users,     setUsers]    = useState<any[]>([]);
@@ -21,6 +22,9 @@ export default function StaffPage() {
   const [resetUser,   setResetUser]   = useState<any>(null);
   const [confirmAct,  setConfirmAct]  = useState<{ user: any; action: string } | null>(null);
   const [submitting,  setSubmitting]  = useState(false);
+  
+  const [userShifts,  setUserShifts]  = useState<any[]>([]);
+  const [statTab,     setStatTab]     = useState<'stats' | 'roster'>('stats');
 
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', password: '',
@@ -47,8 +51,28 @@ export default function StaffPage() {
 
   const openStats = async (user: any) => {
     setStatsUser(user);
-    const { data } = await usersAPI.stats(user.id);
-    setStatsData(data);
+    setStatTab('stats');
+    try {
+      const [sRes, shRes] = await Promise.all([
+        usersAPI.stats(user.id),
+        shiftsAPI.list({ userId: user.id })
+      ]);
+      setStatsData(sRes.data);
+      setUserShifts(shRes.data);
+    } catch (err) {
+      toast.error('Failed to load user intelligence data');
+    }
+  };
+
+  const handleResetDevice = async (userId: string) => {
+    if (!confirm('Authorize a new device for this operator? Existing hardware binding will be severed.')) return;
+    try {
+      await securityAPI.resetDeviceBinding(userId);
+      toast.success('Device binding cleared. Operator can now register a new device.');
+      fetchUsers();
+    } catch (err) {
+      toast.error('Failed to reset device binding');
+    }
   };
 
   const handleCreate = async () => {
@@ -212,6 +236,11 @@ export default function StaffPage() {
                         <button className="p-2 rounded-xl bg-[#AF52DE]/10 hover:bg-[#AF52DE]/20 text-[#AF52DE] transition-colors" title="Reset Password" onClick={() => setResetUser(u)}>
                           <RotateCcw className="w-4 h-4" />
                         </button>
+                        {u.device_fingerprint && (
+                          <button className="p-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-600 transition-colors" title="Reset Device Binding" onClick={() => handleResetDevice(u.id)}>
+                            <Smartphone className="w-4 h-4" />
+                          </button>
+                        )}
                         {u.status === 'active' && (
                           <button className="px-3 py-2 rounded-xl bg-[#FF9500]/10 hover:bg-[#FF9500]/20 text-[#FF9500] text-xs font-bold transition-colors" title="Freeze"
                             onClick={() => setConfirmAct({ user: u, action: 'freeze' })}>
@@ -324,23 +353,76 @@ export default function StaffPage() {
       </Modal>
 
       {/* Stats Modal */}
-      <Modal open={!!statsUser} onClose={() => { setStatsUser(null); setStatsData(null); }} title="Staff Statistics">
+      <Modal open={!!statsUser} onClose={() => { setStatsUser(null); setStatsData(null); setUserShifts([]); }} title="Staff Intelligence">
         {statsUser && (
-          <div className="space-y-4">
-            <p className="text-sm font-semibold text-[#1D1D1F]">{statsUser.first_name} {statsUser.last_name}</p>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 p-4 rounded-3xl bg-black/[0.02] border border-black/5">
+                <div className="w-12 h-12 rounded-full bg-[#007AFF]/10 flex items-center justify-center text-[#007AFF] text-lg font-black">
+                    {statsUser.first_name?.[0]}{statsUser.last_name?.[0]}
+                </div>
+                <div>
+                    <p className="text-base font-black text-[#1D1D1F]">{statsUser.first_name} {statsUser.last_name}</p>
+                    <p className="text-xs font-bold text-[#86868B] uppercase tracking-widest">{statsUser.role} // {statsUser.status}</p>
+                </div>
+            </div>
+
+            <div className="flex gap-1 p-1 bg-black/[0.03] rounded-2xl">
+                <button 
+                    onClick={() => setStatTab('stats')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${statTab === 'stats' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
+                >
+                    PERFORMANCE
+                </button>
+                <button 
+                    onClick={() => setStatTab('roster')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${statTab === 'roster' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
+                >
+                    ROSTER
+                </button>
+            </div>
+
             {!statsData ? <div className="flex justify-center py-6"><Spinner /></div> : (
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Total Sessions', value: statsData.total_sessions },
-                  { label: 'Total Hours',    value: `${parseFloat(statsData.total_hours).toFixed(1)}h` },
-                  { label: 'Total Away',     value: `${statsData.total_away_minutes || 0} min` },
-                  { label: 'Overridden',     value: statsData.overridden_count },
-                ].map(s => (
-                  <div key={s.label} className="p-4 rounded-3xl bg-black/[0.02] border border-black/5">
-                    <p className="text-[11px] font-bold tracking-tight text-[#86868B] uppercase mb-1">{s.label}</p>
-                    <p className="text-2xl font-bold text-[#1D1D1F]">{s.value}</p>
-                  </div>
-                ))}
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                {statTab === 'stats' ? (
+                    <div className="grid grid-cols-2 gap-3">
+                        {[
+                        { label: 'Total Sessions', value: statsData.total_sessions },
+                        { label: 'Total Hours',    value: `${parseFloat(statsData.total_hours).toFixed(1)}h` },
+                        { label: 'Total Away',     value: `${statsData.total_away_minutes || 0}m` },
+                        { label: 'Overridden',     value: statsData.overridden_count },
+                        ].map(s => (
+                        <div key={s.label} className="p-4 rounded-3xl bg-black/[0.01] border border-black/[0.04]">
+                            <p className="text-[10px] font-black tracking-widest text-[#86868B] uppercase mb-1">{s.label}</p>
+                            <p className="text-xl font-bold text-[#1D1D1F]">{s.value}</p>
+                        </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {userShifts.length === 0 ? (
+                            <div className="py-10 text-center">
+                                <Calendar className="mx-auto w-8 h-8 text-black/10 mb-2" />
+                                <p className="text-xs font-bold text-[#86868B]">No assigned missions found.</p>
+                            </div>
+                        ) : userShifts.map((s: any) => (
+                            <div key={s.id} className="p-4 rounded-2xl bg-white border border-black/[0.03] shadow-sm flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs font-black text-[#1D1D1F] mb-1">{s.site_name}</p>
+                                    <p className="text-[10px] font-bold text-[#86868B] uppercase tracking-tighter">
+                                        {format(parseISO(s.start_time), 'MMM d, HH:mm')} — {format(parseISO(s.end_time), 'HH:mm')}
+                                    </p>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight ${
+                                    s.status === 'completed' ? 'bg-green-50 text-green-600' :
+                                    s.status === 'absent' ? 'bg-red-50 text-red-600' :
+                                    'bg-blue-50 text-blue-600'
+                                }`}>
+                                    {s.status}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
               </div>
             )}
           </div>

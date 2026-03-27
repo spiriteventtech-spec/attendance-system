@@ -12,6 +12,7 @@ import { SlidersHorizontal, ChevronLeft, ChevronRight, AlertCircle, ChevronDown,
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Log {
@@ -22,6 +23,7 @@ interface Log {
   total_hours_worked?: number; total_away_minutes?: number;
   status: string; override_comment?: string;
   breach_count: number;
+  shift_id?: string;
 }
 
 // ── Filter Chip (Google Style) ────────────────────────────────
@@ -102,6 +104,17 @@ const AttendanceTable = ({ data, onOverride, onNotes, onBreaches }: any) => {
     columnHelper.accessor('site_name', {
       header: 'Site',
       cell: info => <span className="text-sm font-semibold text-[var(--text-primary)]">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('shift_id', {
+      header: 'Mission',
+      cell: info => info.getValue() ? (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100/50 text-[10px] font-black text-blue-600 uppercase tracking-tighter">
+            <Calendar className="w-2.5 h-2.5" />
+            Shift-Linked
+        </span>
+      ) : (
+        <span className="text-[10px] font-bold text-black/10 uppercase tracking-widest pl-2">Standard</span>
+      ),
     }),
     columnHelper.accessor('check_in_time', {
       header: 'Check-In',
