@@ -360,18 +360,18 @@ export default function AttendancePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="telemetry-label">Check-In</label>
+                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Check-In</label>
                 <input type="datetime-local" className="input-apple" value={overrideForm.checkInTime}
                   onChange={e => setOverrideForm(f => ({ ...f, checkInTime: e.target.value }))} />
               </div>
               <div>
-                <label className="telemetry-label">Check-Out</label>
+                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Check-Out</label>
                 <input type="datetime-local" className="input-apple" value={overrideForm.checkOutTime}
                   onChange={e => setOverrideForm(f => ({ ...f, checkOutTime: e.target.value }))} />
               </div>
             </div>
             <div>
-              <label className="telemetry-label">Audit Comment</label>
+              <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Audit Comment</label>
               <textarea
                 className="input-apple min-h-[100px] resize-none"
                 placeholder="Required for compliance logging..."
@@ -393,14 +393,14 @@ export default function AttendancePage() {
         {detailLog && (
           <div className="space-y-8">
             <div className="space-y-2">
-              <label className="telemetry-label">Check-In Notes</label>
+              <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Check-In Notes</label>
               <div className="p-5 rounded-2xl bg-[var(--bg-main)] text-sm text-[var(--text-primary)] font-medium leading-relaxed italic border border-black/[0.02]">
                 "{detailLog.check_in_note || 'No transcript available'}"
               </div>
             </div>
             {detailLog.check_out_note && (
               <div className="space-y-2">
-                <label className="telemetry-label">Check-Out Notes</label>
+                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Check-Out Notes</label>
                 <div className="p-5 rounded-2xl bg-[var(--bg-main)] text-sm text-[var(--text-primary)] font-medium leading-relaxed italic border border-black/[0.02]">
                   "{detailLog.check_out_note}"
                 </div>

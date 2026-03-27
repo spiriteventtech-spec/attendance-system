@@ -58,17 +58,17 @@ export default function SettingsPage() {
         </div>
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
-            <label className="telemetry-label font-medium mb-1.5 block">Current Password</label>
+            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-1.5">Current Password</label>
             <input type="password" className="input bg-black/[0.02]" placeholder="••••••••"
               value={pwForm.current} onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))} required />
           </div>
           <div>
-            <label className="telemetry-label font-medium mb-1.5 block">New Password</label>
+            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-1.5">New Password</label>
             <input type="password" className="input bg-black/[0.02]" placeholder="Min. 8 characters"
               value={pwForm.next} onChange={e => setPwForm(f => ({ ...f, next: e.target.value }))} required />
           </div>
           <div>
-            <label className="telemetry-label font-medium mb-1.5 block">Confirm New Password</label>
+            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-1.5">Confirm New Password</label>
             <input type="password" className="input bg-black/[0.02]" placeholder="Repeat new password"
               value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} required />
           </div>

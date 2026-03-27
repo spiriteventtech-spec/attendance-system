@@ -85,12 +85,8 @@
     box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.06);
   }
 
-  .telemetry-label {
-    @apply text-[10px] font-bold tracking-widest text-[#86868B] mb-1.5 block uppercase;
-  }
-
-  .telemetry-value {
-    @apply text-2xl font-bold tracking-tight text-[#1D1D1F];
+  .label-apple {
+    @apply text-[11px] font-bold tracking-widest text-[#86868B] mb-1.5 block uppercase;
   }
 }
 

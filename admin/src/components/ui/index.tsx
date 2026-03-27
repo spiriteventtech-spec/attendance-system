@@ -164,7 +164,7 @@ export const FilterInput = ({
   placeholder?: string; type?: string;
 }) => (
   <div className="flex-1 min-w-[140px]">
-    <label className="telemetry-label">{label}</label>
+    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">{label}</label>
     <input
       type={type}
       className="input-apple"
@@ -182,7 +182,7 @@ export const FilterSelect = ({
   options: { value: string; label: string }[];
 }) => (
   <div className="flex-1 min-w-[140px]">
-    <label className="telemetry-label">{label}</label>
+    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">{label}</label>
     <div className="relative">
       <select
         className="input-apple appearance-none pr-10"

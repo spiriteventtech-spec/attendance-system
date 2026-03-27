@@ -42,7 +42,7 @@ export default function LoginPage() {
         <div className="premium-card !p-10">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="telemetry-label !text-xs">Corporate Email</label>
+              <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Corporate Email</label>
               <input
                 type="email"
                 className="input-apple"
@@ -53,7 +53,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="telemetry-label !text-xs">Security Passphrase</label>
+              <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Security Passphrase</label>
               <input
                 type="password"
                 className="input-apple"

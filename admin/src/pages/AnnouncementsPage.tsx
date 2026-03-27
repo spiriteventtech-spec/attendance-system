@@ -189,7 +189,7 @@ export default function AnnouncementsPage() {
           
           {/* Title */}
           <div>
-            <label className="telemetry-label">Title</label>
+            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Title</label>
             <input
               required
               className="input-apple"
@@ -201,7 +201,7 @@ export default function AnnouncementsPage() {
 
           {/* Target Audience */}
           <div>
-            <label className="telemetry-label">Target Audience</label>
+            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Target Audience</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { id: 'all',  label: 'All Staff' },
@@ -251,7 +251,7 @@ export default function AnnouncementsPage() {
 
           {/* Priority */}
           <div>
-            <label className="telemetry-label">Priority</label>
+            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Priority</label>
             <div className="grid grid-cols-3 gap-3">
               {(['general', 'important', 'urgent'] as const).map(p => {
                 const cfg = priorityConfig[p];
@@ -277,7 +277,7 @@ export default function AnnouncementsPage() {
 
           {/* Message */}
           <div>
-            <label className="telemetry-label">Message</label>
+            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Message</label>
             <textarea
               required
               rows={5}

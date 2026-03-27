@@ -112,7 +112,7 @@ export default function SitesPage() {
     setForm(f => ({ ...f, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
     setIsPicking(false);
     setModal(true);
-    toast.success('COORDINATES_LOCKED');
+    toast.success('Coordinates Saved');
   };
 
   const handleSearchSuggestions = async (val: string) => {
@@ -131,14 +131,14 @@ export default function SitesPage() {
   };
 
   const useCurrentLocation = () => {
-    if (!navigator.geolocation) return toast.error('GEOLOCATION_UNAVAILABLE');
+    if (!navigator.geolocation) return toast.error('Geolocation is not supported by your browser');
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
       setForm(f => ({ ...f, latitude: latitude.toFixed(6), longitude: longitude.toFixed(6) }));
       setFlyTo({ lat: latitude, lng: longitude });
-      toast.success('LOCAL_COORDINATES_ACQUIRED');
+      toast.success('Location Acquired');
     }, (err) => {
-      toast.error('LOCATION_ACQUISITION_FAILED');
+      toast.error('Failed to get current location');
     });
   };
 
@@ -152,7 +152,7 @@ export default function SitesPage() {
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.latitude || !form.longitude) {
-      toast.error('INVALID_FORM_STATE: Required fields missing'); return;
+      toast.error('Please fill in all required fields'); return;
     }
     setSubmitting(true);
     try {
@@ -165,28 +165,28 @@ export default function SitesPage() {
 
       if (isEditing && selected) {
         await sitesAPI.update(selected.id, payload);
-        toast.success('STATION_RECONFIGURED_SUCCESS');
+        toast.success('Site Updated Successfully');
       } else {
         await sitesAPI.create(payload);
-        toast.success('NEW_STATION_DEPLOYED');
+        toast.success('New Site Created Successfully');
       }
 
       setModal(false);
       setIsEditing(false);
       fetchSites();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'DEPLOYMENT_FAILED');
+      toast.error(err.response?.data?.error || 'Failed to save site');
     } finally { setSubmitting(false); }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('CONFIRM_DECOMMISSION: Are you sure?')) return;
+    if (!confirm('Are you sure you want to delete this site?')) return;
     try {
         await sitesAPI.delete(id);
-        toast.success('STATION_DECOMMISSIONED');
+        toast.success('Site Deleted Successfully');
         fetchSites();
     } catch (err) {
-        toast.error('DECOMMISSION_FAILED');
+        toast.error('Failed to delete site');
     }
   };
 
@@ -201,16 +201,16 @@ export default function SitesPage() {
         className="flex items-end justify-between border-b border-black/5 pb-8"
       >
         <div>
-           <span className="telemetry-label font-bold text-[#AF52DE] tracking-[0.3em]">Geospatial Asset Management</span>
-           <h1 className="text-4xl font-bold tracking-tighter text-[#1D1D1F] mt-2">
-             Deployment <span className="text-[#86868B]">Stations</span>
+           <span className="text-[11px] font-bold text-[#A855F7] uppercase tracking-widest">Site Management</span>
+           <h1 className="text-4xl font-bold tracking-tight text-[#1D1D1F] mt-2">
+             Deployment <span className="text-[#86868B]">Sites</span>
            </h1>
         </div>
         <button 
-          className="btn-command border-[#AF52DE]/30 text-[#AF52DE] bg-white shadow-premium py-3 px-8 hover:bg-[#AF52DE]/10" 
+          className="btn-apple bg-[#A855F7] text-white shadow-premium py-3 px-8" 
           onClick={() => { setIsEditing(false); setForm({ name: '', description: '', latitude: '', longitude: '', radiusMeters: '100' }); setModal(true); }}
         >
-          <Plus className="w-5 h-5" /> Deploy New Station
+          <Plus className="w-5 h-5 mr-2 inline" /> Add New Site
         </button>
       </motion.div>
 
@@ -219,13 +219,13 @@ export default function SitesPage() {
         <div className="bg-white rounded-3xl flex flex-col overflow-hidden shadow-premium border border-black/5">
             <div className="p-8 border-b border-black/5 bg-gradient-to-br from-[#F5F5F7] to-transparent flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <Activity className="w-5 h-5 text-[#AF52DE] animate-pulse" />
-                    <span className="telemetry-label text-[#AF52DE] font-bold !mb-0">{sites.length} Active Geofences Detected</span>
+                    <Activity className="w-5 h-5 text-[#A855F7]" />
+                    <span className="text-sm font-bold text-[#1D1D1F]">{sites.length} Active Geofences</span>
                 </div>
                 <div className="flex gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#34C759] animate-pulse" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#34C759]/20" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#34C759]/20" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#34C759] shadow-[0_0_8px_rgba(52,199,89,0.3)]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#E5E7EB]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#E5E7EB]" />
                 </div>
             </div>
             
@@ -248,8 +248,8 @@ export default function SitesPage() {
                                     <h3 className="text-lg font-bold text-[#1D1D1F] tracking-tight group-hover:text-[#AF52DE] transition-colors">{site.name}</h3>
                                     <Badge label={site.is_active ? 'Active' : 'Locked'} variant={site.is_active ? 'active' : 'frozen'} />
                                 </div>
-                                <p className="text-[11px] text-[#86868B] uppercase tracking-[0.2em] font-medium">
-                                    {site.description || 'NO_STATION_META_DATA'}
+                                <p className="text-xs text-[#86868B] font-medium">
+                                    {site.description || 'No description provided'}
                                 </p>
                             </div>
                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
@@ -270,16 +270,16 @@ export default function SitesPage() {
 
                         <div className="mt-8 grid grid-cols-2 gap-8 border-t border-black/5 pt-6">
                             <div className="space-y-1">
-                                <span className="text-[9px] font-bold text-[#86868B] uppercase tracking-[0.2em]">Deployment Logic</span>
+                                <span className="text-[10px] font-bold text-[#86868B] uppercase tracking-wider">Location</span>
                                 <div className="flex items-center gap-2">
-                                    <Globe className="w-4 h-4 text-[#AF52DE]" />
-                                    <span className="text-xs font-mono font-bold text-[#1D1D1F]">{parseFloat(site.latitude).toFixed(4)}N, {parseFloat(site.longitude).toFixed(4)}E</span>
+                                    <Globe className="w-4 h-4 text-[#A855F7]" />
+                                    <span className="text-[11px] font-bold text-[#1D1D1F]">{parseFloat(site.latitude).toFixed(4)}°N, {parseFloat(site.longitude).toFixed(4)}°E</span>
                                 </div>
                             </div>
                             <div className="space-y-1 text-right">
-                                <span className="text-[9px] font-bold text-[#86868B] uppercase tracking-[0.2em]">Geofence Radius</span>
+                                <span className="text-[10px] font-bold text-[#86868B] uppercase tracking-wider">Radius</span>
                                 <div className="flex items-center justify-end gap-2 text-[#FF9500]">
-                                    <span className="text-sm font-mono font-bold">{site.radius_meters}m</span>
+                                    <span className="text-[11px] font-bold">{site.radius_meters}m</span>
                                     <ShieldCheck className="w-4 h-4" />
                                 </div>
                             </div>
@@ -351,7 +351,7 @@ export default function SitesPage() {
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-[#F5F5F7]/80 backdrop-blur-md border border-black/5">
                         <Scan className="w-16 h-16 text-black/10 mb-6" />
-                        <h4 className="telemetry-label font-bold text-[#86868B] !mb-0 tracking-widest text-center">Select station for tactical link</h4>
+                        <h4 className="text-sm font-bold text-[#86868B] tracking-wide text-center">Select a site to view on map</h4>
                     </div>
                 )}
 
@@ -360,8 +360,8 @@ export default function SitesPage() {
                     <div className="relative group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B] group-focus-within:text-[#007AFF] transition-colors" />
                         <input
-                            className="bg-white/90 backdrop-blur-md border border-black/10 rounded-[20px] pl-12 pr-4 text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#007AFF]/50 focus:ring-4 focus:ring-[#007AFF]/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-12 w-full font-bold"
-                            placeholder="SEARCH COORDINATES..."
+                            className="bg-white/90 backdrop-blur-md border border-black/10 rounded-[20px] pl-12 pr-4 text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#007AFF]/50 focus:ring-4 focus:ring-[#007AFF]/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-12 w-full font-semibold"
+                            placeholder="Search location..."
                             value={searchQuery}
                             onChange={e => handleSearchSuggestions(e.target.value)}
                         />
@@ -396,10 +396,10 @@ export default function SitesPage() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[1000] py-4 px-8 bg-[#007AFF] text-white rounded-full shadow-[0_0_20px_rgba(0,122,255,0.4)] flex items-center gap-4 border-[3px] border-white"
+                            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[1000] py-4 px-8 bg-[#007AFF] text-white rounded-full shadow-[0_4px_24px_rgba(0,122,255,0.4)] flex items-center gap-4 border-[3px] border-white"
                         >
                             <MousePointer2 className="w-5 h-5 animate-bounce" />
-                            <span className="text-[11px] font-black uppercase tracking-[0.2em]">MANUAL_CAPTURE_ACTIVE</span>
+                            <span className="text-[11px] font-bold uppercase tracking-widest">Pinpointing Location</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -408,44 +408,44 @@ export default function SitesPage() {
             {/* TACTICAL OVERLAY TEXT */}
             <div className="p-6 bg-[#F5F5F7]/80 backdrop-blur-md border-t border-black/5 flex justify-between items-center">
                 <div className="flex gap-4 items-center">
-                    <div className="w-1 h-8 bg-[#AF52DE] rounded-full animate-pulse" />
+                    <div className="w-1 h-8 bg-[#A855F7] rounded-full" />
                     <div>
-                        <p className="text-[9px] font-bold text-[#86868B] uppercase tracking-widest">Signal Strength</p>
-                        <p className="text-[11px] font-black text-[#1D1D1F] tracking-tight">ENCRYPTED // RELIABLE</p>
+                        <p className="text-[9px] font-bold text-[#86868B] uppercase tracking-widest">Connection</p>
+                        <p className="text-[11px] font-bold text-[#1D1D1F] tracking-tight">ENCRYPTED // ACTIVE</p>
                     </div>
                 </div>
                 <div className="text-right">
-                    <p className="text-[9px] font-bold text-[#86868B] uppercase tracking-widest">Feed Status</p>
-                    <p className="text-[11px] font-black text-[#34C759] tracking-widest uppercase animate-pulse">Live Link Established</p>
+                    <p className="text-[9px] font-bold text-[#86868B] uppercase tracking-widest">Live Updates</p>
+                    <p className="text-[11px] font-bold text-[#34C759] tracking-widest uppercase">Streaming</p>
                 </div>
             </div>
         </div>
       </div>
 
       {/* DEPLOYMENT TERMINAL (MODAL) */}
-      <Modal open={modal} onClose={() => setModal(false)} title={isEditing ? 'RECONFIGURE_STATION' : 'INITIALIZE_DEPLOYMENT'}>
+      <Modal open={modal} onClose={() => setModal(false)} title={isEditing ? 'Update Site' : 'Create New Site'}>
         <div className="space-y-8">
           <div className="space-y-6">
               <div>
-                <label className="telemetry-label">Station Codename</label>
-                <input className="input-terminal" placeholder="ENTER IDENTIFIER..." value={form.name}
+                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Site Name</label>
+                <input className="input-apple" placeholder="Enter site name..." value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
               </div>
               <div>
-                <label className="telemetry-label">Operational Brief (Optional)</label>
-                <textarea className="input-terminal h-24 resize-none" placeholder="ENTER BRIEFING..." value={form.description}
+                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Description (Optional)</label>
+                <textarea className="input-apple h-24 resize-none py-4" placeholder="Brief site description..." value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
               </div>
               
               <div className="grid grid-cols-2 gap-6 bg-[#F5F5F7] p-6 rounded-[24px] border border-black/5 shadow-inner">
                 <div>
-                  <label className="telemetry-label text-[#86868B]">Latitudinal Axis</label>
-                  <input className="bg-transparent border-0 text-[#1D1D1F] font-mono text-xl focus:ring-0 w-full p-0 font-bold" placeholder="00.0000" type="number" step="any"
+                  <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-widest block mb-1">Latitude</label>
+                  <input className="bg-transparent border-0 text-[#1D1D1F] text-xl focus:ring-0 w-full p-0 font-bold" placeholder="00.0000" type="number" step="any"
                     value={form.latitude} onChange={e => setForm(f => ({ ...f, latitude: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="telemetry-label text-[#86868B]">Longitudinal Axis</label>
-                  <input className="bg-transparent border-0 text-[#1D1D1F] font-mono text-xl focus:ring-0 w-full p-0 font-bold" placeholder="00.0000" type="number" step="any"
+                  <label className="text-[10px] font-bold text-[#86868B] uppercase tracking-widest block mb-1">Longitude</label>
+                  <input className="bg-transparent border-0 text-[#1D1D1F] text-xl focus:ring-0 w-full p-0 font-bold" placeholder="00.0000" type="number" step="any"
                     value={form.longitude} onChange={e => setForm(f => ({ ...f, longitude: e.target.value }))} />
                 </div>
               </div>
@@ -454,41 +454,41 @@ export default function SitesPage() {
                 <button 
                   type="button"
                   className={clsx(
-                    "btn-command py-4 border-white/5 text-white/20 hover:text-brand-purple",
-                    isPicking && "text-brand-purple border-brand-purple shadow-[0_0_20px_rgba(168,85,247,0.2)] animate-pulse"
+                    "btn-apple-secondary py-4",
+                    isPicking && "border-[#A855F7] text-[#A855F7] shadow-[0_0_20px_rgba(168,85,247,0.1)]"
                   )}
                   onClick={() => { setIsPicking(!isPicking); if (!isPicking) setModal(false); }}
                 >
-                  <MousePointer2 className="w-4 h-4" /> {isPicking ? 'CAPTURE_IN_PROGRESS' : 'MANUAL_CAPTURE'}
+                  <MousePointer2 className="w-4 h-4 mr-2 inline" /> {isPicking ? 'Selecting...' : 'Select on Map'}
                 </button>
                 <button 
                   type="button"
-                  className="btn-command py-4 border-white/10 text-white/40 hover:text-white"
+                  className="btn-apple-secondary py-4"
                   onClick={useCurrentLocation}
                 >
-                  <Crosshair className="w-4 h-4" /> PING_LOCAL_COORD
+                  <Crosshair className="w-4 h-4 mr-2 inline" /> Use Current Location
                 </button>
               </div>
 
               <div>
-                <label className="telemetry-label">Geofence Perimeter (Meters)</label>
+                <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Geofence Radius (Meters)</label>
                 <div className="relative group">
-                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-purple animate-pulse" />
-                    <input className="input-terminal pl-12 text-brand-purple font-bold text-lg" type="number" min="10" max="10000"
+                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A855F7]" />
+                    <input className="input-apple pl-12 text-[#A855F7] font-bold text-lg" type="number" min="10" max="10000"
                         value={form.radiusMeters} onChange={e => setForm(f => ({ ...f, radiusMeters: e.target.value }))} />
                 </div>
-                <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mt-3 italic">Threshold: 50m (Structural) // 500m (Sector Wide)</p>
+                <p className="text-[10px] font-semibold text-[#86868B] mt-3 italic">Standard: 50m — Wide Range: 500m+</p>
               </div>
           </div>
 
           <div className="flex gap-4 pt-4">
-            <button className="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white" onClick={() => setModal(false)}>Abort</button>
+            <button className="flex-1 py-4 text-xs font-bold text-[#86868B] hover:text-[#1D1D1F] transition-colors" onClick={() => setModal(false)}>Cancel</button>
             <button 
-              className="btn-command flex-1 py-4 border-brand-purple/40 text-brand-purple hover:bg-brand-purple/10 shadow-soft-3d font-black" 
+              className="btn-apple flex-1 py-4 bg-[#A855F7] text-white shadow-premium font-bold" 
               onClick={handleSubmit} 
               disabled={submitting}
             >
-              {submitting ? <Spinner size="sm" /> : (isEditing ? 'COMMIT_RECONFIG' : 'EXECUTE_DEPLOYMENT')}
+              {submitting ? <Spinner size="sm" /> : (isEditing ? 'Update Site' : 'Create Site')}
             </button>
           </div>
         </div>

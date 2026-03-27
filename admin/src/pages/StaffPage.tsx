@@ -134,7 +134,7 @@ export default function StaffPage() {
       {/* Filters */}
       <div className="bg-white rounded-[24px] p-6 border border-black/5 shadow-premium flex flex-wrap gap-4 items-end">
         <div className="flex-1 min-w-[200px]">
-          <label className="telemetry-label mb-2 block">Search</label>
+          <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Search</label>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
             <input className="input pl-11 bg-black/[0.03] border-transparent" placeholder="Name or email…" value={search}
@@ -241,18 +241,18 @@ export default function StaffPage() {
       <Modal open={createModal} onClose={() => setCreateModal(false)} title="Add New Staff Member">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="telemetry-label">First Name</label>
+            <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">First Name</label>
               <input className="input-apple" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} /></div>
-            <div><label className="telemetry-label">Last Name</label>
+            <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Last Name</label>
               <input className="input-apple" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} /></div>
           </div>
-          <div><label className="telemetry-label">Email</label>
+          <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Email</label>
             <input className="input-apple" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
-          <div><label className="telemetry-label">Password (min 8 chars)</label>
+          <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Password (min 8 chars)</label>
             <input className="input-apple" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} /></div>
-          <div><label className="telemetry-label">Phone (optional)</label>
+          <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Phone (optional)</label>
             <input className="input-apple" type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
-          <div><label className="telemetry-label">Role</label>
+          <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Role</label>
             <select className="input-apple" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
               <option value="staff">Staff</option>
               <option value="admin">Admin</option>
@@ -272,16 +272,16 @@ export default function StaffPage() {
         {editUser && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="telemetry-label">First Name</label>
+              <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">First Name</label>
                 <input className="input-apple" value={editUser.first_name} onChange={e => setEditUser((u: any) => ({ ...u, first_name: e.target.value }))} /></div>
-              <div><label className="telemetry-label">Last Name</label>
+              <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Last Name</label>
                 <input className="input-apple" value={editUser.last_name} onChange={e => setEditUser((u: any) => ({ ...u, last_name: e.target.value }))} /></div>
             </div>
-            <div><label className="telemetry-label">Email</label>
+            <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Email</label>
               <input className="input-apple" type="email" value={editUser.email} onChange={e => setEditUser((u: any) => ({ ...u, email: e.target.value }))} /></div>
-            <div><label className="telemetry-label">Phone</label>
+            <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Phone</label>
               <input className="input-apple" type="tel" value={editUser.phone || ''} onChange={e => setEditUser((u: any) => ({ ...u, phone: e.target.value }))} /></div>
-            <div><label className="telemetry-label">Role</label>
+            <div><label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-2">Role</label>
               <select className="input-apple" value={editUser.role} onChange={e => setEditUser((u: any) => ({ ...u, role: e.target.value }))}>
                 <option value="staff">Staff</option>
                 <option value="admin">Admin</option>
@@ -306,7 +306,7 @@ export default function StaffPage() {
               Please communicate the new password securely.
             </p>
             <div>
-              <label className="telemetry-label">New Password (min 8 chars)</label>
+              <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-1.5">New Password (min 8 chars)</label>
               <input className="input-apple" type="password" value={resetPassword}
                 onChange={e => setResetPassword(e.target.value)} placeholder="••••••••" />
             </div>

@@ -93,7 +93,7 @@ export default function ReportsPage() {
         breaches:    logs.reduce((s: number, l: any) => s + (parseInt(l.breach_count) || 0), 0),
       });
     } catch (err) {
-      toast.error('Failed to load telemetry summary');
+      toast.error('Failed to load summary');
     } finally {
       setLoadingSummary(false);
     }
@@ -140,7 +140,7 @@ export default function ReportsPage() {
 
       {/* Date Presets */}
       <div className="bg-white rounded-[24px] p-6 border border-black/5 shadow-premium">
-        <label className="telemetry-label mb-3 block">Quick Ranges</label>
+        <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-3">Quick Ranges</label>
         <div className="flex flex-wrap gap-2">
           {presets.map(p => (
             <button
@@ -166,7 +166,7 @@ export default function ReportsPage() {
           <FilterInput label="To"   type="date" value={filters.endDate}   onChange={v => setFilter('endDate', v)} />
           
           <div className="flex flex-col gap-1.5 min-w-[160px]">
-            <label className="telemetry-label">Calc Frequency</label>
+            <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block">Calc Frequency</label>
             <div className="flex bg-black/[0.03] p-1 rounded-2xl">
               {['daily', 'weekly', 'monthly'].map(f => (
                 <button

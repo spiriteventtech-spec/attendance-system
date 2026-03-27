@@ -1,6 +1,7 @@
 // src/App.tsx
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+// UI_VERSION: 1.0.2 - REFRESH_FORCE
 import { Toaster } from 'react-hot-toast';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Menu } from 'lucide-react';

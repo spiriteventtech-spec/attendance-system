@@ -68,7 +68,7 @@ export default function PersonalDashboard() {
       toast.success('IDENTITY_AVATAR_UPDATED', { id: loadingToast });
       loadData();
     } catch (err: any) {
-      toast.error('UPLOAD_PROTOCOL_FAILURE', { id: loadingToast });
+      toast.error('Failed to upload file', { id: loadingToast });
     }
   };
 
@@ -90,7 +90,7 @@ export default function PersonalDashboard() {
   };
 
   const handleCheckIn = async () => {
-    if (!checkInForm.siteId) return toast.error('PROTOCOL ERROR: Site ID Required');
+    if (!checkInForm.siteId) return toast.error('Please select a site');
     setCheckingIn(true);
     try {
       const pos = await new Promise<GeolocationPosition>((res, rej) => 
@@ -151,7 +151,7 @@ export default function PersonalDashboard() {
                </div>
             </div>
             <div>
-                <span className="telemetry-label text-brand-cyan">Operator Identity Detected</span>
+                <span className="text-[10px] font-bold text-[#A855F7] uppercase tracking-widest">Active Session Detected</span>
                 <h1 className="text-4xl font-bold tracking-tighter text-white">
                     {user?.firstName} <span className="text-white/40">{user?.lastName}</span>
                 </h1>
@@ -226,7 +226,7 @@ export default function PersonalDashboard() {
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                     <Radar className="w-24 h-24" />
                 </div>
-                <span className="telemetry-label mb-6">Real-Time Core Status</span>
+                <span className="text-[10px] font-bold text-[#86868B] uppercase tracking-widest mb-6 block">Real-Time Status</span>
                 {active ? (
                     <div className="space-y-6">
                         <div className="p-6 rounded-2xl bg-gradient-to-br from-brand-purple/10 to-brand-blue/10 border border-brand-purple/20">
@@ -245,7 +245,7 @@ export default function PersonalDashboard() {
                         </div>
                         <div className="flex items-center gap-3 justify-center py-2 text-brand-purple">
                             <div className="status-pulse-cyan !bg-brand-purple after:bg-brand-purple" />
-                            <span className="text-[10px] font-bold tracking-[0.3em] uppercase animate-pulse">Telemetry Nominal</span>
+                            <span className="text-[10px] font-bold tracking-widest uppercase">System Online</span>
                         </div>
                     </div>
                 ) : (
@@ -264,7 +264,7 @@ export default function PersonalDashboard() {
             {/* COMMUNICATIONS TERMINAL */}
             <div className="bg-[#2D2E3D] rounded-3xl p-8 shadow-soft-3d border border-white/[0.03]">
                 <div className="flex items-center justify-between mb-8">
-                    <span className="telemetry-label text-brand-purple">Incoming Directives</span>
+                    <span className="text-[10px] font-bold text-[#A855F7] uppercase tracking-widest">Recent Messages</span>
                     <Badge label="Secure Channel" />
                 </div>
                 {announcements.length === 0 ? (
@@ -291,7 +291,7 @@ export default function PersonalDashboard() {
             <div className="bg-[#2D2E3D] rounded-3xl h-full flex flex-col overflow-hidden shadow-soft-3d border border-white/[0.03]">
                 <div className="p-8 border-b border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent flex items-center justify-between">
                     <div>
-                        <span className="telemetry-label text-brand-purple">Mission History</span>
+                        <span className="text-[10px] font-bold text-[#A855F7] uppercase tracking-widest">Work History</span>
                         <h2 className="text-sm font-bold tracking-tight">Recent Execution Logs</h2>
                     </div>
                     <button className="btn-command border-brand-purple/30 text-brand-purple">Archive History</button>
@@ -303,10 +303,10 @@ export default function PersonalDashboard() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-white/[0.02]">
-                                    <th className="p-6 telemetry-label">Mission ID / Site</th>
-                                    <th className="p-6 telemetry-label">Temporal Window</th>
-                                    <th className="p-6 telemetry-label">Metrics</th>
-                                    <th className="p-6 telemetry-label">Status</th>
+                                    <th className="p-6 text-[10px] font-bold text-[#86868B] uppercase tracking-widest">Site Name</th>
+                                    <th className="p-6 text-[10px] font-bold text-[#86868B] uppercase tracking-widest">Time Window</th>
+                                    <th className="p-6 text-[10px] font-bold text-[#86868B] uppercase tracking-widest">Duration</th>
+                                    <th className="p-6 text-[10px] font-bold text-[#86868B] uppercase tracking-widest">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -361,7 +361,7 @@ export default function PersonalDashboard() {
             
             <div className="space-y-6">
                 <div>
-                    <label className="telemetry-label">Deployment Sector</label>
+                    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-1">Assigned Site</label>
                     <select 
                        className="input-terminal" 
                        value={checkInForm.siteId} 
@@ -374,7 +374,7 @@ export default function PersonalDashboard() {
                     </select>
                 </div>
                 <div>
-                    <label className="telemetry-label">Directive Summary (Shift Note)</label>
+                    <label className="text-[11px] font-bold text-[#86868B] uppercase tracking-widest block mb-1">Shift Notes</label>
                     <textarea 
                         className="input-terminal h-32 resize-none" 
                         placeholder="ENTER MISSION OBJECTIVES..."
@@ -391,14 +391,14 @@ export default function PersonalDashboard() {
                   className="btn-command flex-1 py-4 animate-shimmer"
                   onClick={handleCheckIn}
                 >
-                    {checkingIn ? <Spinner size="sm" /> : 'Execute Check-In Protocol'}
+                    {checkingIn ? <Spinner size="sm" /> : 'Confirm Check-In'}
                 </button>
             </div>
         </div>
       </Modal>
 
       {/* Check-Out Modal (Placeholder logic for style) */}
-      <Modal open={showCheckOut} onClose={() => setShowCheckOut(false)} title="Debrief Protocol">
+      <Modal open={showCheckOut} onClose={() => setShowCheckOut(false)} title="Check-Out Summary">
         <div className="space-y-8">
             <textarea 
                className="input-terminal h-48"

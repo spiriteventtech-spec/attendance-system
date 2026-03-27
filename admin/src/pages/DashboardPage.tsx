@@ -152,7 +152,7 @@ export default function DashboardPage() {
                     "px-2 py-0.5 rounded-full text-[10px] font-bold",
                     u.is_inside ? "bg-[#34C759]/10 text-[#34C759]" : "bg-[#FF3B30]/10 text-[#FF3B30]"
                   )}>
-                    {u.is_inside ? 'INSIDE' : 'AWAY'}
+                    {u.is_inside ? 'ON SITE' : 'OFF SITE'}
                   </div>
                 </div>
               ))}

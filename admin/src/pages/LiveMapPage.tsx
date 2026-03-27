@@ -87,7 +87,7 @@ const StaffOverlays = ({ staff, onSelect }: { staff: any[]; onSelect: (u: any) =
                   className="btn-apple-secondary w-full mt-3 py-1.5 text-[11px]"
                   onClick={() => onSelect(u)}
                 >
-                  View Intel
+                  View Details
                 </button>
              </div>
           </Popup>
@@ -153,7 +153,7 @@ export default function LiveMapPage() {
       const { data } = await locationAPI.live();
       setStaff(data);
     } catch (e) {
-      toast.error('Telemetry Connection Interrupted');
+      toast.error('Connection interrupted');
     } finally {
       setLoading(false);
     }
@@ -203,8 +203,8 @@ export default function LiveMapPage() {
           style={{ width: '100%', height: '100%', background: '#f5f5f7' }}
         >
           <TileLayer 
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" 
-            attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+            url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en" 
+            attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
           />
           <FitBounds positions={jitteredStaff.map(u => [u.displayLat, u.displayLng])} />
 
@@ -264,21 +264,21 @@ export default function LiveMapPage() {
         >
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-[#007AFF]/10 flex items-center justify-center">
-              <Radar className="w-5 h-5 text-[#007AFF] animate-pulse" />
+              <Radar className="w-5 h-5 text-[#007AFF]" />
             </div>
             <div>
-              <h1 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#86868B]">Workforce Telemetry</h1>
+              <h1 className="text-[10px] font-bold tracking-widest uppercase text-[#86868B]">Live Staff Locations</h1>
               <div className="flex items-center gap-4 mt-0.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-[#34C759] shadow-[0_0_10px_rgba(52,199,89,0.5)]" />
-                  <span className="text-xl font-black text-[#1D1D1F] tracking-tight">{staff.length} <span className="text-[#86868B] text-sm">Nodes</span></span>
+                  <div className="w-2 h-2 rounded-full bg-[#34C759] shadow-[0_0_8px_rgba(52,199,89,0.3)]" />
+                  <span className="text-xl font-bold text-[#1D1D1F] tracking-tight">{staff.length} <span className="text-[#86868B] text-sm font-medium">Active</span></span>
                 </div>
               </div>
             </div>
           </div>
           <div className="h-8 w-px bg-black/10" />
           <button className="btn-apple bg-black/5 text-[#86868B] font-bold" onClick={fetchLive}>
-            <RefreshCw className="w-4 h-4 mr-2 inline" /> Synchronize
+            <RefreshCw className="w-4 h-4 mr-2 inline" /> Update Feed
           </button>
         </motion.div>
 
@@ -289,7 +289,7 @@ export default function LiveMapPage() {
             className="bg-white/90 backdrop-blur-xl px-5 py-3 rounded-full border border-black/5 flex items-center gap-3 shadow-premium"
           >
             <Activity className="w-4 h-4 text-[#34C759]" />
-            <span className="text-[10px] font-bold tracking-widest text-[#34C759]">CORE_STATUS: NOMINAL</span>
+            <span className="text-[10px] font-bold tracking-widest text-[#34C759]">SYSTEM_STATUS: ONLINE</span>
           </motion.div>
         </div>
       </div>
@@ -303,7 +303,7 @@ export default function LiveMapPage() {
           className="bg-white/90 backdrop-blur-xl rounded-[24px] flex-1 flex flex-col pointer-events-auto overflow-hidden shadow-premium border border-black/5"
         >
           <div className="p-5 border-b border-black/5 bg-[#F5F5F7]/50">
-            <span className="telemetry-label font-bold text-[#1D1D1F]">Protocol Feed</span>
+            <span className="text-xs font-bold text-[#1D1D1F] uppercase tracking-wider">Activity Feed</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
             {staff.map(u => (
@@ -327,7 +327,7 @@ export default function LiveMapPage() {
                 <div className="flex justify-between items-center text-[11px]">
                   <span className="text-[#86868B] font-medium tracking-wide truncate max-w-[120px]">{u.site_name}</span>
                   <span className={`font-bold ${u.is_inside ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
-                    {u.is_inside ? 'NOMINAL' : 'ALERT'}
+                    {u.is_inside ? 'Verified' : 'Flagged'}
                   </span>
                 </div>
               </motion.div>
@@ -355,7 +355,7 @@ export default function LiveMapPage() {
               </button>
               
               <div className="flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full bg-[#007AFF]/10 p-1 mb-4 flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-[#007AFF]/10 p-1 mb-4 flex items-center justify-center shadow-inner">
                   <div className="w-full h-full rounded-full overflow-hidden bg-white shadow-sm flex items-center justify-center text-[#007AFF] font-bold text-3xl">
                     {selected.avatar_url ? (
                       <img src={`${(import.meta.env.VITE_API_BASE_URL || '').replace('/api', '')}${selected.avatar_url}`} className="w-full h-full object-cover" />
@@ -367,7 +367,7 @@ export default function LiveMapPage() {
                 <h2 className="text-2xl font-bold tracking-tight text-[#1D1D1F]">{selected.first_name} {selected.last_name}</h2>
                 <div className="flex items-center gap-3 mt-3">
                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest bg-white ${selected.is_inside ? 'text-[#34C759] border border-[#34C759]/30' : 'text-[#FF3B30] border border-[#FF3B30]/30'}`}>
-                      {selected.is_inside ? 'INSIDE ZONE' : 'BREACHED'}
+                      {selected.is_inside ? 'SECURED' : 'BREACHED'}
                    </div>
                 </div>
               </div>
@@ -410,35 +410,35 @@ export default function LiveMapPage() {
 
               {/* Action: Command Broadcast */}
               <div className="space-y-4 pt-6 border-t border-black/5">
-                <span className="text-[10px] font-bold uppercase text-[#86868B] tracking-wider">Terminal Directive</span>
+                <span className="text-[10px] font-bold uppercase text-[#86868B] tracking-wider">Direct Message</span>
                 <div className="space-y-3">
                   <textarea 
                     value={messageText}
                     onChange={e => setMessageText(e.target.value)}
                     className="bg-black/5 border-transparent rounded-2xl p-4 text-sm text-[#1D1D1F] placeholder-[#86868B] w-full h-24 resize-none focus:outline-none focus:ring-2 focus:ring-[#007AFF]/20 transition-all font-medium"
-                    placeholder="Enter broadcast message..."
+                    placeholder="Type message to staff..."
                   />
                   <button 
                     disabled={sendingMsg}
-                    className="btn-apple bg-[#007AFF] text-white w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold shadow-[0_4px_14px_rgba(0,122,255,0.3)] hover:shadow-[0_6px_20px_rgba(0,122,255,0.4)]"
+                    className="btn-apple bg-[#007AFF] text-white w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold shadow-blue hover:shadow-[0_8px_24px_rgba(0,122,255,0.3)]"
                     onClick={() => {
                       if (!messageText.trim()) return;
                       setSendingMsg(true);
                       setTimeout(() => {
-                        toast.success('Directive Transmitted Successfully');
+                        toast.success('Message sent successfully');
                         setSendingMsg(false);
                         setMessageText('');
                       }, 1000);
                     }}
                   >
-                    <Send className="w-4 h-4" /> Transmit Command
+                    <Send className="w-4 h-4" /> Send Message
                   </button>
                 </div>
               </div>
             </div>
 
             <div className="p-4 bg-[#F5F5F7] text-center border-t border-black/5">
-               <p className="text-[10px] font-bold text-[#86868B] uppercase tracking-wider">Secure Link Active</p>
+               <p className="text-[10px] font-bold text-[#86868B] uppercase tracking-wider">Secure Connection</p>
             </div>
           </motion.div>
         )}
