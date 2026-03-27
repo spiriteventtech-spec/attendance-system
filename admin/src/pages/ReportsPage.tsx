@@ -134,21 +134,21 @@ export default function ReportsPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-[#F1F5F9]">Reports & Export</h1>
-        <p className="text-sm text-steel-400">Generate and download attendance reports</p>
+        <h1 className="text-2xl font-bold text-[#1D1D1F] tracking-tight">Reports & Export</h1>
+        <p className="text-sm font-medium text-[#86868B] mt-1">Generate and download attendance reports</p>
       </div>
 
       {/* Date Presets */}
-      <div className="card p-4">
-        <label className="label mb-3 block">Quick Ranges</label>
+      <div className="bg-white rounded-[24px] p-6 border border-black/5 shadow-premium">
+        <label className="telemetry-label mb-3 block">Quick Ranges</label>
         <div className="flex flex-wrap gap-2">
           {presets.map(p => (
             <button
               key={p.label}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
                 filters.startDate === p.start && filters.endDate === p.end
-                  ? 'bg-brand text-white'
-                  : 'bg-[#0F172A] border border-[#334155] text-steel-400 hover:border-brand/40 hover:text-[#F1F5F9]'
+                  ? 'bg-[#007AFF] text-white shadow-sm'
+                  : 'bg-black/[0.03] text-[#86868B] hover:bg-black/[0.06] hover:text-[#1D1D1F]'
               }`}
               onClick={() => setFilters(f => ({ ...f, startDate: p.start, endDate: p.end }))}
             >
@@ -157,7 +157,7 @@ export default function ReportsPage() {
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-3 mt-4">
+        <div className="flex flex-wrap gap-4 mt-6">
           <FilterSelect label="Site / Project" value={filters.siteId} onChange={v => setFilter('siteId', v)}
             options={[{ value:'', label:'All Sites' }, ...sites.map(s => ({ value: s.id, label: s.name }))]} />
           <FilterSelect label="Staff Member" value={filters.userId} onChange={v => setFilter('userId', v)}
@@ -165,15 +165,15 @@ export default function ReportsPage() {
           <FilterInput label="From" type="date" value={filters.startDate} onChange={v => setFilter('startDate', v)} />
           <FilterInput label="To"   type="date" value={filters.endDate}   onChange={v => setFilter('endDate', v)} />
           
-          <div className="flex flex-col gap-1.5 min-w-[140px]">
-            <label className="label">Calc Frequency</label>
-            <div className="flex bg-[#0F172A] border border-[#334155] rounded-xl p-1">
+          <div className="flex flex-col gap-1.5 min-w-[160px]">
+            <label className="telemetry-label">Calc Frequency</label>
+            <div className="flex bg-black/[0.03] p-1 rounded-2xl">
               {['daily', 'weekly', 'monthly'].map(f => (
                 <button
                   key={f}
                   onClick={() => setFilter('frequency', f)}
-                  className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-                    filters.frequency === f ? 'bg-brand text-black' : 'text-steel-400 hover:text-white'
+                  className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold capitalize transition-all ${
+                    filters.frequency === f ? 'bg-white text-[#1D1D1F] shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
                   }`}
                 >
                   {f}
@@ -187,10 +187,10 @@ export default function ReportsPage() {
       {/* Analytics Visualizer */}
       {!loadingSummary && aggregated && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="card p-6">
+          <div className="bg-white rounded-[24px] p-6 border border-black/5 shadow-premium">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-semibold text-[#F1F5F9] flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-brand" /> Hour Trends ({filters.frequency})
+              <h3 className="text-sm font-bold text-[#1D1D1F] flex items-center gap-2 tracking-tight">
+                <TrendingUp className="w-5 h-5 text-[#007AFF]" /> Hour Trends ({filters.frequency})
               </h3>
             </div>
             <div className="h-[240px] w-full">
@@ -198,39 +198,39 @@ export default function ReportsPage() {
                 <AreaChart data={aggregated.timeline}>
                   <defs>
                     <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00F5FF" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#00F5FF" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#007AFF" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#007AFF" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                  <XAxis dataKey="date" stroke="#64748B" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#64748B" fontSize={10} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+                  <XAxis dataKey="date" stroke="#86868B" fontSize={11} fontWeight={600} tickLine={false} axisLine={false} dy={10} />
+                  <YAxis stroke="#86868B" fontSize={11} fontWeight={600} tickLine={false} axisLine={false} dx={-10} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }}
-                    itemStyle={{ color: '#00F5FF' }}
+                    contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '16px', fontSize: '13px', fontWeight: 600, boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+                    itemStyle={{ color: '#007AFF' }}
                   />
-                  <Area type="monotone" dataKey="hours" stroke="#00F5FF" fillOpacity={1} fill="url(#colorHours)" />
+                  <Area type="monotone" dataKey="hours" stroke="#007AFF" strokeWidth={3} fillOpacity={1} fill="url(#colorHours)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="card p-6">
-            <h3 className="text-sm font-semibold text-[#F1F5F9] mb-6 flex items-center gap-2">
-              <Users className="w-4 h-4 text-purple-400" /> Staff Allocation (Total Hours)
+          <div className="bg-white rounded-[24px] p-6 border border-black/5 shadow-premium">
+            <h3 className="text-sm font-bold text-[#1D1D1F] mb-6 flex items-center gap-2 tracking-tight">
+              <Users className="w-5 h-5 text-[#AF52DE]" /> Staff Allocation (Total Hours)
             </h3>
             <div className="h-[240px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={aggregated.staff} layout="vertical">
                   <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" stroke="#94A3B8" fontSize={10} width={100} tickLine={false} axisLine={false} />
+                  <YAxis dataKey="name" type="category" stroke="#86868B" fontSize={11} fontWeight={600} width={100} tickLine={false} axisLine={false} />
                   <Tooltip 
-                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                    contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }}
+                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                    contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '16px', fontSize: '13px', fontWeight: 600, boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
                   />
-                  <Bar dataKey="hours" fill="#A855F7" radius={[0, 4, 4, 0]} barSize={20}>
+                  <Bar dataKey="hours" fill="#AF52DE" radius={[0, 6, 6, 0]} barSize={24}>
                     {aggregated.staff.map((_: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#A855F7' : '#8B5CF6'} />
+                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#AF52DE' : '#BF5AF2'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -242,9 +242,9 @@ export default function ReportsPage() {
 
       {/* Summary Stats */}
       {loadingSummary ? (
-        <div className="flex justify-center py-4"><Spinner /></div>
+        <div className="flex justify-center py-12"><Spinner /></div>
       ) : summary && (
-        <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 xl:grid-cols-5 gap-4 lg:gap-6">
           <StatCard label="Sessions"     value={summary.sessions}    icon={<BarChart3 className="w-5 h-5"/>}  color="blue" />
           <StatCard label="Total Hours"  value={`${summary.totalHours}h`} icon={<FileText className="w-5 h-5"/>}    color="green" />
           <StatCard label="Away Time"    value={`${summary.totalAway}m`}  icon={<FileText className="w-5 h-5"/>}    color="amber" />
@@ -254,44 +254,48 @@ export default function ReportsPage() {
       )}
 
       {/* Export Buttons */}
-      <div className="card p-6">
-        <h2 className="text-sm font-semibold text-[#F1F5F9] mb-5">Export Report</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="bg-white rounded-[24px] p-6 border border-black/5 shadow-premium">
+        <h2 className="text-lg font-bold text-[#1D1D1F] mb-6 tracking-tight">Export Report</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {/* PDF */}
-          <div className="p-5 rounded-xl bg-[#0F172A] border border-[#334155] hover:border-red-500/30 transition-all">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 rounded-xl bg-red-500/10">
-                <FileText className="w-5 h-5 text-red-400" />
+          <div className="p-6 rounded-3xl bg-[#FF3B30]/5 border border-[#FF3B30]/10 hover:bg-[#FF3B30]/10 transition-all flex flex-col justify-between group">
+            <div>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-2xl bg-[#FF3B30]/10 group-hover:scale-110 transition-transform">
+                  <FileText className="w-6 h-6 text-[#FF3B30]" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-[#1D1D1F]">PDF Report</p>
+                  <p className="text-xs font-semibold tracking-wide text-[#86868B] uppercase">Formatted</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-[#F1F5F9]">PDF Report</p>
-                <p className="text-xs text-steel-400">Formatted for printing</p>
-              </div>
+              <p className="text-sm font-medium text-[#86868B] mb-6 leading-relaxed">
+                Generates a multi-page PDF with summary stats and a paginated attendance table. Best for sharing and archiving.
+              </p>
             </div>
-            <p className="text-xs text-steel-400 mb-4">
-              Generates a multi-page PDF with summary stats and a paginated attendance table. Best for sharing and archiving.
-            </p>
-            <button className="btn-danger w-full justify-center" onClick={() => downloadReport('pdf')} disabled={!!loading}>
+            <button className="w-full bg-[#FF3B30] text-white font-bold px-6 py-3.5 rounded-full hover:bg-[#FF3B30]/90 transition-colors shadow-sm flex items-center justify-center gap-2 active:scale-95" onClick={() => downloadReport('pdf')} disabled={!!loading}>
               {loading === 'pdf' ? <Spinner size="sm" /> : <><Download className="w-4 h-4" /> Download PDF</>}
             </button>
           </div>
 
           {/* Excel */}
-          <div className="p-5 rounded-xl bg-[#0F172A] border border-[#334155] hover:border-green-500/30 transition-all">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 rounded-xl bg-green-500/10">
-                <FileSpreadsheet className="w-5 h-5 text-green-400" />
+          <div className="p-6 rounded-3xl bg-[#34C759]/5 border border-[#34C759]/10 hover:bg-[#34C759]/10 transition-all flex flex-col justify-between group">
+            <div>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-2xl bg-[#34C759]/10 group-hover:scale-110 transition-transform">
+                  <FileSpreadsheet className="w-6 h-6 text-[#34C759]" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-[#1D1D1F]">Excel Workbook</p>
+                  <p className="text-xs font-semibold tracking-wide text-[#86868B] uppercase">.xlsx format</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-[#F1F5F9]">Excel Spreadsheet</p>
-                <p className="text-xs text-steel-400">.xlsx with formatting</p>
-              </div>
+              <p className="text-sm font-medium text-[#86868B] mb-6 leading-relaxed">
+                Full dataset in a styled Excel workbook with a summary sheet and all attendance logs. Supports 10,000+ records.
+              </p>
             </div>
-            <p className="text-xs text-steel-400 mb-4">
-              Full dataset in a styled Excel workbook with a summary sheet and all attendance logs. Supports 10,000+ records.
-            </p>
             <button
-              className="w-full justify-center bg-green-600/20 text-green-400 border border-green-600/30 font-semibold px-4 py-2 rounded-lg hover:bg-green-600/30 transition-colors flex items-center gap-2"
+              className="w-full bg-[#34C759] text-white font-bold px-6 py-3.5 rounded-full hover:bg-[#34C759]/90 transition-colors shadow-sm flex items-center justify-center gap-2 active:scale-95"
               onClick={() => downloadReport('xlsx')} disabled={!!loading}
             >
               {loading === 'xlsx' ? <Spinner size="sm" /> : <><Download className="w-4 h-4" /> Download Excel</>}
@@ -299,20 +303,22 @@ export default function ReportsPage() {
           </div>
 
           {/* CSV */}
-          <div className="p-5 rounded-xl bg-[#0F172A] border border-[#334155] hover:border-blue-500/30 transition-all">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 rounded-xl bg-blue-500/10">
-                <FileSpreadsheet className="w-5 h-5 text-blue-400" />
+          <div className="p-6 rounded-3xl bg-[#007AFF]/5 border border-[#007AFF]/10 hover:bg-[#007AFF]/10 transition-all flex flex-col justify-between group">
+            <div>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-2xl bg-[#007AFF]/10 group-hover:scale-110 transition-transform">
+                  <FileSpreadsheet className="w-6 h-6 text-[#007AFF]" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-[#1D1D1F]">CSV Export</p>
+                  <p className="text-xs font-semibold tracking-wide text-[#86868B] uppercase">Raw data</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-[#F1F5F9]">CSV Export</p>
-                <p className="text-xs text-steel-400">Raw data for analysis</p>
-              </div>
+              <p className="text-sm font-medium text-[#86868B] mb-6 leading-relaxed">
+                Plain comma-separated values for importing into any analytics tool, database, or custom reporting system.
+              </p>
             </div>
-            <p className="text-xs text-steel-400 mb-4">
-              Plain comma-separated values for importing into any analytics tool, database, or custom reporting system.
-            </p>
-            <button className="btn-primary w-full justify-center" onClick={() => downloadReport('csv')} disabled={!!loading}>
+            <button className="btn-apple w-full justify-center py-3.5 text-[15px]" onClick={() => downloadReport('csv')} disabled={!!loading}>
               {loading === 'csv' ? <Spinner size="sm" /> : <><Download className="w-4 h-4" /> Download CSV</>}
             </button>
           </div>
@@ -321,3 +327,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+

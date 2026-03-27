@@ -101,37 +101,20 @@ export const StatCard = ({
 };
 
 // ── Stat Widget (iOS Style) ───────────────────────────────────
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
-
 export const StatWidget = ({
-  label, value, icon, color, data,
+  label, value, icon, color,
 }: {
-  label: string; value: React.ReactNode; icon: React.ReactNode;
-  color: string; data: number[];
+  label: string; value: React.ReactNode; icon: React.ReactNode; color: string;
 }) => (
-  <div className="premium-card !p-5 flex flex-col justify-between h-[180px] hover:scale-[1.02] active:scale-[0.98]">
+  <div className="premium-card !p-6 flex flex-col justify-between h-[160px] hover:scale-[1.02] active:scale-[0.98]">
     <div className="flex justify-between items-start">
-      <div className="p-2.5 rounded-2xl bg-black/[0.03] text-[#1D1D1F]">
+      <div className={clsx("p-3 rounded-2xl")} style={{ backgroundColor: `color-mix(in srgb, ${color} 15%, transparent)`, color }}>
         {icon}
       </div>
-      <div className="w-16 h-8">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data.map(v => ({ v }))}>
-            <Line 
-              type="monotone" 
-              dataKey="v" 
-              stroke={color} 
-              strokeWidth={3} 
-              dot={false} 
-              animationDuration={1500}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
     </div>
-    <div>
-      <p className="text-[12px] font-bold text-[#86868B] tracking-tight mb-0.5 uppercase">{label}</p>
-      <p className="text-4xl font-bold text-[#1D1D1F] tracking-tighter">{value}</p>
+    <div className="mt-4">
+      <p className="text-[12px] font-bold text-[#86868B] tracking-tight uppercase mb-1">{label}</p>
+      <p className="text-4xl font-black text-[#1D1D1F] tracking-tighter" style={{ color }}>{value}</p>
     </div>
   </div>
 );
@@ -164,9 +147,12 @@ export const ConfirmDialog = ({
 
 // ── Empty State ───────────────────────────────────────────────
 export const EmptyState = ({ message = 'No data found' }: { message?: string }) => (
-  <div className="flex flex-col items-center justify-center py-20 text-[#86868B] bg-black/[0.02] border border-dashed border-black/10 rounded-3xl">
-    <div className="text-5xl mb-6 opacity-40 grayscale-0">📂</div>
-    <p className="text-sm font-semibold tracking-tight">{message}</p>
+  <div className="flex flex-col items-center justify-center p-12 text-[#86868B] bg-white rounded-3xl border border-black/5 mx-auto max-w-2xl my-8">
+    <div className="w-16 h-16 bg-[#F5F5F7] rounded-full flex items-center justify-center mb-4">
+      <span className="text-2xl opacity-60">📂</span>
+    </div>
+    <h3 className="text-[#1D1D1F] font-semibold text-lg mb-1 tracking-tight">No Results Found</h3>
+    <p className="text-sm font-medium tracking-tight text-center max-w-xs">{message}</p>
   </div>
 );
 

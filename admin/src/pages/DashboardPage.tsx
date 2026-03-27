@@ -83,28 +83,24 @@ export default function DashboardPage() {
           value={stats.checkedInNow} 
           icon={<CheckCircle2 className="w-5 h-5" />} 
           color="var(--brand-success)" 
-          data={[12, 18, 15, 22, stats.checkedInNow]}
         />
         <StatWidget 
           label="Geofence Alerts" 
           value={stats.breachedNow} 
           icon={<AlertTriangle className="w-5 h-5" />} 
           color="var(--brand-danger)" 
-          data={[1, 0, 2, 1, stats.breachedNow]}
         />
         <StatWidget 
           label="Today's Sessions" 
           value={stats.todaySessions} 
           icon={<Clock className="w-5 h-5" />} 
           color="var(--brand-primary)" 
-          data={[40, 45, 38, 52, stats.todaySessions]}
         />
         <StatWidget 
           label="Adjustments" 
           value={stats.overridesWeek} 
           icon={<MapPin className="w-5 h-5" />} 
           color="var(--brand-warning)" 
-          data={[0, 1, 0, 2, stats.overridesWeek]}
         />
       </div>
 

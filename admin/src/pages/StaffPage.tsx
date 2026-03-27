@@ -119,25 +119,25 @@ export default function StaffPage() {
   };
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-[#F1F5F9]">Staff Management</h1>
-          <p className="text-sm text-steel-400">{total} total users</p>
+          <h1 className="text-2xl font-bold text-[#1D1D1F] tracking-tight">Staff Management</h1>
+          <p className="text-sm font-medium text-[#86868B] mt-1">{total} total users</p>
         </div>
-        <button className="btn-primary" onClick={() => setCreateModal(true)}>
+        <button className="btn-apple bg-[#007AFF] text-white font-bold" onClick={() => setCreateModal(true)}>
           <UserPlus className="w-4 h-4" /> Add Staff
         </button>
       </div>
 
       {/* Filters */}
-      <div className="card p-4 flex flex-wrap gap-3 items-end">
+      <div className="bg-white rounded-[24px] p-6 border border-black/5 shadow-premium flex flex-wrap gap-4 items-end">
         <div className="flex-1 min-w-[200px]">
-          <label className="label">Search</label>
+          <label className="telemetry-label mb-2 block">Search</label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-steel-400" />
-            <input className="input pl-8" placeholder="Name or email…" value={search}
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <input className="input pl-11 bg-black/[0.03] border-transparent" placeholder="Name or email…" value={search}
               onChange={e => setSearch(e.target.value)} />
           </div>
         </div>
@@ -147,80 +147,84 @@ export default function StaffPage() {
         <FilterSelect label="Role" value={roleFilter} onChange={setRole}
           options={[{ value:'', label:'All Roles' }, { value:'staff', label:'Staff' },
                     { value:'admin', label:'Admin' }]} />
-        <button className="btn-ghost text-xs" onClick={() => { setSearch(''); setStatus(''); setRole(''); }}>
+        <button className="btn-apple bg-black/5 text-[#86868B] font-bold" onClick={() => { setSearch(''); setStatus(''); setRole(''); }}>
           Clear
         </button>
       </div>
 
       {/* Table */}
-      <div className="card overflow-hidden">
+      <div className="bg-white rounded-[24px] overflow-hidden border border-black/5 shadow-premium">
         {loading ? (
           <div className="flex justify-center py-16"><Spinner /></div>
         ) : users.length === 0 ? (
           <EmptyState message="No users match your filters." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-left">
               <thead>
-                <tr className="bg-[#0F172A]">
-                  <th className="table-th">Name</th>
-                  <th className="table-th">Email</th>
-                  <th className="table-th">Role</th>
-                  <th className="table-th">Status</th>
-                  <th className="table-th">Joined</th>
-                  <th className="table-th">Actions</th>
+                <tr className="bg-[#F5F5F7] border-b border-black/5">
+                  <th className="py-4 px-6 text-xs font-bold text-[#86868B] uppercase tracking-wider">Name</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#86868B] uppercase tracking-wider">Email</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#86868B] uppercase tracking-wider">Role</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#86868B] uppercase tracking-wider">Status</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#86868B] uppercase tracking-wider">Joined</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#86868B] uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-black/5">
                 {users.map(u => (
-                  <tr key={u.id} className="hover:bg-[#253352]/30 transition-colors group">
-                    <td className="table-td">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand text-xs font-bold flex-shrink-0">
+                  <tr key={u.id} className="hover:bg-[#F5F5F7]/50 transition-colors group">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-[#007AFF]/10 flex items-center justify-center text-[#007AFF] text-sm font-bold flex-shrink-0">
                           {u.first_name?.[0]}{u.last_name?.[0]}
                         </div>
-                        <span className="font-semibold text-[#F1F5F9] text-xs">
+                        <span className="font-bold text-[#1D1D1F]">
                           {u.first_name} {u.last_name}
                         </span>
                       </div>
                     </td>
-                    <td className="table-td text-xs">{u.email}</td>
-                    <td className="table-td"><Badge label={u.role} /></td>
-                    <td className="table-td">
-                      <span className={`text-xs font-semibold capitalize ${statusColor[u.status]}`}>
+                    <td className="py-4 px-6 text-sm font-medium text-[#86868B]">{u.email}</td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-block px-2.5 py-1 text-[11px] font-bold uppercase rounded-full tracking-wider ${u.role === 'admin' ? 'bg-[#AF52DE]/10 text-[#AF52DE]' : 'bg-[#007AFF]/10 text-[#007AFF]'}`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`text-xs font-bold tracking-wide capitalize ${u.status === 'active' ? 'text-[#34C759]' : u.status === 'frozen' ? 'text-[#FF9500]' : 'text-[#86868B]'}`}>
                         {u.status === 'frozen' ? '🔒 Frozen' : u.status === 'archived' ? '📦 Archived' : '● Active'}
                       </span>
                     </td>
-                    <td className="table-td text-xs text-steel-400">
+                    <td className="py-4 px-6 text-sm font-medium text-[#86868B]">
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
-                    <td className="table-td">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="btn-ghost py-1 px-2 text-xs" title="View Stats" onClick={() => openStats(u)}>
-                          <Eye className="w-3.5 h-3.5" />
+                    <td className="py-4 px-6">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="p-2 rounded-xl bg-black/5 hover:bg-black/10 text-[#86868B] transition-colors" title="View Stats" onClick={() => openStats(u)}>
+                          <Eye className="w-4 h-4" />
                         </button>
-                        <button className="btn-ghost py-1 px-2 text-xs" title="Edit" onClick={() => setEditUser({ ...u })}>
-                          <Edit2 className="w-3.5 h-3.5" />
+                        <button className="p-2 rounded-xl bg-[#007AFF]/10 hover:bg-[#007AFF]/20 text-[#007AFF] transition-colors" title="Edit" onClick={() => setEditUser({ ...u })}>
+                          <Edit2 className="w-4 h-4" />
                         </button>
-                        <button className="btn-ghost py-1 px-2 text-xs" title="Reset Password" onClick={() => setResetUser(u)}>
-                          <RotateCcw className="w-3.5 h-3.5" />
+                        <button className="p-2 rounded-xl bg-[#AF52DE]/10 hover:bg-[#AF52DE]/20 text-[#AF52DE] transition-colors" title="Reset Password" onClick={() => setResetUser(u)}>
+                          <RotateCcw className="w-4 h-4" />
                         </button>
                         {u.status === 'active' && (
-                          <button className="text-xs px-2 py-1 rounded bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 transition-colors" title="Freeze"
+                          <button className="px-3 py-2 rounded-xl bg-[#FF9500]/10 hover:bg-[#FF9500]/20 text-[#FF9500] text-xs font-bold transition-colors" title="Freeze"
                             onClick={() => setConfirmAct({ user: u, action: 'freeze' })}>
-                            <Lock className="w-3.5 h-3.5" />
+                            <Lock className="w-4 h-4 inline mr-1" /> Freeze
                           </button>
                         )}
                         {u.status === 'frozen' && (
-                          <button className="text-xs px-2 py-1 rounded bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors" title="Unfreeze"
+                          <button className="px-3 py-2 rounded-xl bg-[#34C759]/10 hover:bg-[#34C759]/20 text-[#34C759] text-xs font-bold transition-colors" title="Unfreeze"
                             onClick={() => setConfirmAct({ user: u, action: 'unfreeze' })}>
                             Unfreeze
                           </button>
                         )}
                         {u.status !== 'archived' && u.role !== 'admin' && (
-                          <button className="text-xs px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors" title="Archive"
+                          <button className="p-2 rounded-xl bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20 text-[#FF3B30] transition-colors" title="Archive"
                             onClick={() => setConfirmAct({ user: u, action: 'archive' })}>
-                            <Archive className="w-3.5 h-3.5" />
+                            <Archive className="w-4 h-4" />
                           </button>
                         )}
                       </div>

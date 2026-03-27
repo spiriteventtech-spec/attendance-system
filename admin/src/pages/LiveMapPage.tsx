@@ -260,25 +260,25 @@ export default function LiveMapPage() {
         <motion.div 
           initial={{ x: -20, opacity: 0 }} 
           animate={{ x: 0, opacity: 1 }}
-          className="bg-[#2D2E3D] rounded-3xl px-8 py-5 pointer-events-auto flex items-center gap-8 shadow-soft-3d border border-white/[0.03]"
+          className="bg-white/90 backdrop-blur-xl rounded-full px-8 py-4 pointer-events-auto flex items-center gap-8 shadow-premium border border-black/5"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-purple to-brand-blue flex items-center justify-center shadow-lg">
-              <Radar className="w-6 h-6 text-white animate-pulse" />
+            <div className="w-10 h-10 rounded-full bg-[#007AFF]/10 flex items-center justify-center">
+              <Radar className="w-5 h-5 text-[#007AFF] animate-pulse" />
             </div>
             <div>
-              <h1 className="text-xs font-black tracking-[0.2em] uppercase text-white/40">Workforce Telemetry</h1>
-              <div className="flex items-center gap-4 mt-1">
+              <h1 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#86868B]">Workforce Telemetry</h1>
+              <div className="flex items-center gap-4 mt-0.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-brand-purple shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
-                  <span className="text-lg font-black text-white tracking-tight">{staff.length} <span className="text-white/20">Nodes</span></span>
+                  <div className="w-2 h-2 rounded-full bg-[#34C759] shadow-[0_0_10px_rgba(52,199,89,0.5)]" />
+                  <span className="text-xl font-black text-[#1D1D1F] tracking-tight">{staff.length} <span className="text-[#86868B] text-sm">Nodes</span></span>
                 </div>
               </div>
             </div>
           </div>
-          <div className="h-10 w-px bg-white/5" />
-          <button className="btn-command border-brand-purple/20 text-brand-purple hover:bg-brand-purple/10" onClick={fetchLive}>
-            <RefreshCw className="w-3.5 h-3.5" /> Synchronize
+          <div className="h-8 w-px bg-black/10" />
+          <button className="btn-apple bg-black/5 text-[#86868B] font-bold" onClick={fetchLive}>
+            <RefreshCw className="w-4 h-4 mr-2 inline" /> Synchronize
           </button>
         </motion.div>
 
@@ -286,10 +286,10 @@ export default function LiveMapPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }} 
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#2D2E3D] px-6 py-3 rounded-2xl border border-brand-purple/20 flex items-center gap-3 shadow-soft-3d"
+            className="bg-white/90 backdrop-blur-xl px-5 py-3 rounded-full border border-black/5 flex items-center gap-3 shadow-premium"
           >
-            <Activity className="w-4 h-4 text-brand-purple" />
-            <span className="text-[10px] font-black tracking-widest text-brand-purple">CORE_STATUS: NOMINAL</span>
+            <Activity className="w-4 h-4 text-[#34C759]" />
+            <span className="text-[10px] font-bold tracking-widest text-[#34C759]">CORE_STATUS: NOMINAL</span>
           </motion.div>
         </div>
       </div>
@@ -300,34 +300,34 @@ export default function LiveMapPage() {
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="bg-[#2D2E3D] rounded-3xl flex-1 flex flex-col pointer-events-auto overflow-hidden shadow-soft-3d border border-white/[0.03]"
+          className="bg-white/90 backdrop-blur-xl rounded-[24px] flex-1 flex flex-col pointer-events-auto overflow-hidden shadow-premium border border-black/5"
         >
-          <div className="p-6 border-b border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
-            <span className="telemetry-label text-brand-purple">Protocol Feed</span>
+          <div className="p-5 border-b border-black/5 bg-[#F5F5F7]/50">
+            <span className="telemetry-label font-bold text-[#1D1D1F]">Protocol Feed</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
             {staff.map(u => (
               <motion.div 
                 key={u.user_id}
-                whileHover={{ x: 4, backgroundColor: 'rgba(255,255,255,0.03)' }}
+                whileHover={{ x: 4, backgroundColor: 'rgba(0,0,0,0.02)' }}
                 onClick={() => setSelected(u)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                className={`p-4 rounded-[16px] border transition-all cursor-pointer ${
                   selected?.user_id === u.user_id 
-                    ? 'border-brand-purple/50 bg-gradient-to-br from-brand-purple/5 to-brand-blue/5 shadow-[0_0_20px_rgba(168,85,247,0.15)]' 
-                    : 'border-white/5 bg-white/[0.01]'
+                    ? 'border-[#007AFF]/30 bg-[#007AFF]/5 shadow-sm' 
+                    : 'border-black/5 bg-white'
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${u.is_inside ? 'bg-brand-purple shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-brand-orange shadow-[0_0_10px_rgba(251,146,60,0.5)]'}`} />
-                    <span className="text-xs font-black text-white tracking-tight">{u.first_name} {u.last_name}</span>
+                    <div className={`w-2 h-2 rounded-full ${u.is_inside ? 'bg-[#34C759]' : 'bg-[#FF3B30] animate-pulse'}`} />
+                    <span className="text-sm font-bold text-[#1D1D1F] tracking-tight">{u.first_name} {u.last_name}</span>
                   </div>
-                  <span className="text-[9px] font-black text-white/20">{format(new Date(u.pinged_at), 'HH:mm')}</span>
+                  <span className="text-[10px] font-bold text-[#86868B]">{format(new Date(u.pinged_at), 'HH:mm')}</span>
                 </div>
-                <div className="flex justify-between items-center text-[10px]">
-                  <span className="text-white/40 uppercase font-bold tracking-widest truncate max-w-[120px]">{u.site_name}</span>
-                  <span className={`font-black ${u.is_inside ? 'text-brand-purple' : 'text-brand-orange'}`}>
-                    {u.is_inside ? 'SIGNAL_NOMINAL' : 'DEVIATION_ALERT'}
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-[#86868B] font-medium tracking-wide truncate max-w-[120px]">{u.site_name}</span>
+                  <span className={`font-bold ${u.is_inside ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
+                    {u.is_inside ? 'NOMINAL' : 'ALERT'}
                   </span>
                 </div>
               </motion.div>
@@ -343,86 +343,84 @@ export default function LiveMapPage() {
             initial={{ x: 400, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 400, opacity: 0 }}
-            className="absolute top-6 right-6 bottom-6 w-96 bg-[#2D2E3D] rounded-3xl z-20 pointer-events-auto flex flex-col shadow-soft-3d border border-white/[0.03] overflow-hidden"
+            className="absolute top-6 right-6 bottom-6 w-[380px] bg-white/95 backdrop-blur-2xl rounded-[32px] z-20 pointer-events-auto flex flex-col shadow-premium border border-black/5 overflow-hidden"
           >
             {/* Header / ID Card */}
-            <div className="p-10 bg-gradient-to-br from-white/[0.03] to-transparent border-b border-white/5 relative text-center">
+            <div className="p-8 bg-gradient-to-b from-[#F5F5F7] to-transparent border-b border-black/5 relative text-center">
               <button 
                 onClick={() => setSelected(null)}
-                className="absolute top-6 right-6 p-2 text-white/20 hover:text-white transition-colors"
+                className="absolute top-6 right-6 p-2 bg-black/5 rounded-full text-[#86868B] hover:text-[#1D1D1F] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
               
               <div className="flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand-purple to-brand-blue p-1 shadow-lg mb-4">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-[#2D2E3D] p-1">
+                <div className="w-24 h-24 rounded-full bg-[#007AFF]/10 p-1 mb-4 flex items-center justify-center">
+                  <div className="w-full h-full rounded-full overflow-hidden bg-white shadow-sm flex items-center justify-center text-[#007AFF] font-bold text-3xl">
                     {selected.avatar_url ? (
-                      <img src={`${(import.meta.env.VITE_API_BASE_URL || '').replace('/api', '')}${selected.avatar_url}`} className="w-full h-full rounded-full object-cover" />
+                      <img src={`${(import.meta.env.VITE_API_BASE_URL || '').replace('/api', '')}${selected.avatar_url}`} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-[#2D2E3D] flex items-center justify-center text-white font-black italic text-3xl">
-                        {selected.first_name[0]}
-                      </div>
+                      selected.first_name[0]
                     )}
                   </div>
                 </div>
-                <h2 className="text-3xl font-black tracking-tighter text-white">{selected.first_name} <span className="text-white/20">{selected.last_name}</span></h2>
-                <div className="flex items-center gap-3 mt-4">
-                   <div className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] bg-white/5 border ${selected.is_inside ? 'border-brand-purple/30 text-brand-purple' : 'border-brand-orange/30 text-brand-orange'}`}>
-                      {selected.is_inside ? 'SIGNAL_NOMINAL' : 'PERIMETER_BREACH'}
+                <h2 className="text-2xl font-bold tracking-tight text-[#1D1D1F]">{selected.first_name} {selected.last_name}</h2>
+                <div className="flex items-center gap-3 mt-3">
+                   <div className={`px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest bg-white ${selected.is_inside ? 'text-[#34C759] border border-[#34C759]/30' : 'text-[#FF3B30] border border-[#FF3B30]/30'}`}>
+                      {selected.is_inside ? 'INSIDE ZONE' : 'BREACHED'}
                    </div>
                 </div>
               </div>
             </div>
 
             {/* Vital Signs / Telemetry */}
-            <div className="flex-1 p-8 space-y-10 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <span className="telemetry-label text-brand-purple">Assigned Site</span>
+            <div className="flex-1 p-8 space-y-8 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase text-[#86868B] tracking-wider">Assigned Site</span>
                   <div className="flex items-center gap-2">
-                    <Navigation className="w-4 h-4 text-white/40" />
-                    <span className="text-xs font-black uppercase text-white truncate">{selected.site_name}</span>
+                    <Navigation className="w-3.5 h-3.5 text-[#1D1D1F]" />
+                    <span className="text-sm font-bold text-[#1D1D1F] truncate">{selected.site_name}</span>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <span className="telemetry-label text-brand-purple">Session Time</span>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase text-[#86868B] tracking-wider">Session Time</span>
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-white/40" />
-                    <span className="text-xs font-black text-white">{formatDistanceToNow(new Date(selected.check_in_time)).toUpperCase()}</span>
+                    <Clock className="w-3.5 h-3.5 text-[#1D1D1F]" />
+                    <span className="text-sm font-bold text-[#1D1D1F]">{formatDistanceToNow(new Date(selected.check_in_time))}</span>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <span className="telemetry-label text-brand-purple">Spatial Drift</span>
-                  <span className="text-xs font-black text-brand-orange">{Math.round(selected.total_away_minutes)}M DEVIATION</span>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase text-[#86868B] tracking-wider">Spatial Drift</span>
+                  <span className="text-sm font-bold text-[#FF3B30] block mt-1">{Math.round(selected.total_away_minutes)}m Deviation</span>
                 </div>
-                <div className="space-y-2">
-                  <span className="telemetry-label text-brand-purple">Auth Status</span>
-                  <span className="text-xs font-black text-white/40 leading-none">ID_{selected.user_id.split('-')[0].toUpperCase()}</span>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase text-[#86868B] tracking-wider">Auth Status</span>
+                  <span className="text-sm font-bold text-[#1D1D1F] block mt-1 uppercase">ID_{selected.user_id.split('-')[0]}</span>
                 </div>
               </div>
 
               {/* Logs */}
-              <div className="space-y-4">
-                <span className="telemetry-label text-brand-purple">Mission Parameters</span>
-                <div className="p-6 rounded-2xl bg-[#252634] border border-white/5 italic text-white/40 text-[11px] leading-relaxed">
-                  "{selected.check_in_note || 'INITIALIZING_LOG_PARAMETERS_NULL'}"
+              <div className="space-y-3">
+                <span className="text-[10px] font-bold uppercase text-[#86868B] tracking-wider">Mission Parameters</span>
+                <div className="p-5 rounded-2xl bg-black/5 text-[#86868B] text-sm leading-relaxed font-medium">
+                  "{selected.check_in_note || 'No check-in note provided.'}"
                 </div>
               </div>
 
               {/* Action: Command Broadcast */}
-              <div className="space-y-4 pt-6 border-t border-white/5">
-                <span className="telemetry-label text-brand-purple">Terminal Directive</span>
-                <div className="space-y-4">
+              <div className="space-y-4 pt-6 border-t border-black/5">
+                <span className="text-[10px] font-bold uppercase text-[#86868B] tracking-wider">Terminal Directive</span>
+                <div className="space-y-3">
                   <textarea 
                     value={messageText}
                     onChange={e => setMessageText(e.target.value)}
-                    className="bg-[#252634] border border-white/10 rounded-2xl p-4 text-xs text-white placeholder-white/10 w-full h-24 resize-none focus:outline-none focus:border-brand-purple/50 transition-all font-bold"
-                    placeholder="ENTER OVERRIDE SEQUENCE..."
+                    className="bg-black/5 border-transparent rounded-2xl p-4 text-sm text-[#1D1D1F] placeholder-[#86868B] w-full h-24 resize-none focus:outline-none focus:ring-2 focus:ring-[#007AFF]/20 transition-all font-medium"
+                    placeholder="Enter broadcast message..."
                   />
                   <button 
                     disabled={sendingMsg}
-                    className="btn-command w-full py-5 rounded-2xl border-brand-purple/40 text-brand-purple hover:bg-brand-purple/10 flex items-center justify-center gap-3 font-black text-[10px]"
+                    className="btn-apple bg-[#007AFF] text-white w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold shadow-[0_4px_14px_rgba(0,122,255,0.3)] hover:shadow-[0_6px_20px_rgba(0,122,255,0.4)]"
                     onClick={() => {
                       if (!messageText.trim()) return;
                       setSendingMsg(true);
@@ -433,14 +431,14 @@ export default function LiveMapPage() {
                       }, 1000);
                     }}
                   >
-                    <Send className="w-4 h-4" /> TRANSMIT_COMMAND
+                    <Send className="w-4 h-4" /> Transmit Command
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 bg-[#252634]/50 text-center">
-               <p className="text-[7px] font-black tracking-[0.5em] text-white/10 uppercase">Secure Link Active // Sector 07-ID</p>
+            <div className="p-4 bg-[#F5F5F7] text-center border-t border-black/5">
+               <p className="text-[10px] font-bold text-[#86868B] uppercase tracking-wider">Secure Link Active</p>
             </div>
           </motion.div>
         )}

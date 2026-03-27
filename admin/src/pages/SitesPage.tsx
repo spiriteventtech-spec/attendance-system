@@ -193,21 +193,21 @@ export default function SitesPage() {
   if (loading) return <div className="flex justify-center py-32 bg-void"><Spinner size="lg" /></div>;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-12 h-[calc(100vh-64px)] flex flex-col bg-[#252634]">
+    <div className="p-8 max-w-7xl mx-auto space-y-12 h-[calc(100vh-64px)] flex flex-col bg-transparent">
       {/* HEADER SECTION */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-end justify-between border-b border-white/[0.05] pb-8"
+        className="flex items-end justify-between border-b border-black/5 pb-8"
       >
         <div>
-           <span className="telemetry-label font-bold text-brand-purple tracking-[0.3em]">Geospatial Asset Management</span>
-           <h1 className="text-4xl font-bold tracking-tighter text-white mt-2">
-             Deployment <span className="text-white/40">Stations</span>
+           <span className="telemetry-label font-bold text-[#AF52DE] tracking-[0.3em]">Geospatial Asset Management</span>
+           <h1 className="text-4xl font-bold tracking-tighter text-[#1D1D1F] mt-2">
+             Deployment <span className="text-[#86868B]">Stations</span>
            </h1>
         </div>
         <button 
-          className="btn-command border-brand-purple/30 text-brand-purple shadow-soft-3d py-3 px-8 hover:bg-brand-purple/10" 
+          className="btn-command border-[#AF52DE]/30 text-[#AF52DE] bg-white shadow-premium py-3 px-8 hover:bg-[#AF52DE]/10" 
           onClick={() => { setIsEditing(false); setForm({ name: '', description: '', latitude: '', longitude: '', radiusMeters: '100' }); setModal(true); }}
         >
           <Plus className="w-5 h-5" /> Deploy New Station
@@ -216,16 +216,16 @@ export default function SitesPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-12 flex-1 min-h-0">
         {/* SITES LIST TERMINAL */}
-        <div className="bg-[#2D2E3D] rounded-3xl flex flex-col overflow-hidden shadow-soft-3d border border-white/[0.03]">
-            <div className="p-8 border-b border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent flex items-center justify-between">
+        <div className="bg-white rounded-3xl flex flex-col overflow-hidden shadow-premium border border-black/5">
+            <div className="p-8 border-b border-black/5 bg-gradient-to-br from-[#F5F5F7] to-transparent flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <Activity className="w-4 h-4 text-brand-purple animate-pulse" />
-                    <span className="telemetry-label text-brand-purple !mb-0">{sites.length} Active Geofences Deteced</span>
+                    <Activity className="w-5 h-5 text-[#AF52DE] animate-pulse" />
+                    <span className="telemetry-label text-[#AF52DE] font-bold !mb-0">{sites.length} Active Geofences Detected</span>
                 </div>
                 <div className="flex gap-2">
-                    <div className="w-2 h-2 rounded-full bg-brand-purple animate-pulse" />
-                    <div className="w-2 h-2 rounded-full bg-brand-purple/20" />
-                    <div className="w-2 h-2 rounded-full bg-brand-purple/20" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#34C759] animate-pulse" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#34C759]/20" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#34C759]/20" />
                 </div>
             </div>
             
@@ -237,30 +237,30 @@ export default function SitesPage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
                         className={clsx(
-                            'bg-[#252634] rounded-2xl group relative !p-6 cursor-pointer border border-white/5 transition-all duration-500 overflow-hidden',
-                            selected?.id === site.id ? 'border-brand-purple/50 bg-brand-purple/[0.03] shadow-[0_0_30px_rgba(168,85,247,0.1)]' : 'hover:border-white/20'
+                            'bg-white rounded-[20px] group relative !p-6 cursor-pointer border shadow-sm transition-all duration-300 overflow-hidden hover:shadow-premium',
+                            selected?.id === site.id ? 'border-[#AF52DE] bg-[#AF52DE]/[0.02] shadow-[0_0_20px_rgba(175,82,222,0.1)]' : 'border-black/5 hover:border-black/10'
                         )}
                         onClick={() => setSelected(selected?.id === site.id ? null : site)}
                     >
                         <div className="flex justify-between items-start">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3">
-                                    <h3 className="text-lg font-bold text-white tracking-tight group-hover:text-brand-purple transition-colors">{site.name}</h3>
+                                    <h3 className="text-lg font-bold text-[#1D1D1F] tracking-tight group-hover:text-[#AF52DE] transition-colors">{site.name}</h3>
                                     <Badge label={site.is_active ? 'Active' : 'Locked'} variant={site.is_active ? 'active' : 'frozen'} />
                                 </div>
-                                <p className="text-[11px] text-white/40 uppercase tracking-[0.2em] font-medium italic">
+                                <p className="text-[11px] text-[#86868B] uppercase tracking-[0.2em] font-medium">
                                     {site.description || 'NO_STATION_META_DATA'}
                                 </p>
                             </div>
                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                 <button 
-                                  className="p-2 rounded-lg bg-white/5 text-white/40 hover:text-brand-purple hover:bg-brand-purple/10"
+                                  className="p-2 rounded-xl bg-black/5 text-[#86868B] hover:text-[#007AFF] hover:bg-[#007AFF]/10 transition-colors"
                                   onClick={(e) => { e.stopPropagation(); setIsEditing(true); setSelected(site); setForm({ ...site, radiusMeters: site.radius_meters.toString() }); setModal(true); }}
                                 >
                                     <Edit2 className="w-4 h-4" />
                                 </button>
                                 <button 
-                                  className="p-2 rounded-lg bg-white/5 text-white/40 hover:text-brand-red hover:bg-brand-red/10"
+                                  className="p-2 rounded-xl bg-black/5 text-[#86868B] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10 transition-colors"
                                   onClick={(e) => { e.stopPropagation(); handleDelete(site.id); }}
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -268,19 +268,19 @@ export default function SitesPage() {
                             </div>
                         </div>
 
-                        <div className="mt-8 grid grid-cols-2 gap-8 border-t border-white/5 pt-6">
+                        <div className="mt-8 grid grid-cols-2 gap-8 border-t border-black/5 pt-6">
                             <div className="space-y-1">
-                                <span className="text-[8px] font-bold text-white/20 uppercase tracking-[0.2em]">Deployment Logic</span>
+                                <span className="text-[9px] font-bold text-[#86868B] uppercase tracking-[0.2em]">Deployment Logic</span>
                                 <div className="flex items-center gap-2">
-                                    <Globe className="w-3 h-3 text-brand-purple" />
-                                    <span className="text-xs font-mono text-white/60">{parseFloat(site.latitude).toFixed(4)}N, {parseFloat(site.longitude).toFixed(4)}E</span>
+                                    <Globe className="w-4 h-4 text-[#AF52DE]" />
+                                    <span className="text-xs font-mono font-bold text-[#1D1D1F]">{parseFloat(site.latitude).toFixed(4)}N, {parseFloat(site.longitude).toFixed(4)}E</span>
                                 </div>
                             </div>
                             <div className="space-y-1 text-right">
-                                <span className="text-[8px] font-bold text-white/20 uppercase tracking-[0.2em]">Geofence Radius</span>
-                                <div className="flex items-center justify-end gap-2 text-brand-orange">
-                                    <span className="text-xs font-mono font-bold animate-pulse">{site.radius_meters}m</span>
-                                    <ShieldCheck className="w-3 h-3" />
+                                <span className="text-[9px] font-bold text-[#86868B] uppercase tracking-[0.2em]">Geofence Radius</span>
+                                <div className="flex items-center justify-end gap-2 text-[#FF9500]">
+                                    <span className="text-sm font-mono font-bold">{site.radius_meters}m</span>
+                                    <ShieldCheck className="w-4 h-4" />
                                 </div>
                             </div>
                         </div>
@@ -290,9 +290,9 @@ export default function SitesPage() {
         </div>
 
         {/* TACTICAL MAP PREVIEW */}
-        <div className="bg-[#2D2E3D] rounded-3xl relative overflow-hidden h-full flex flex-col shadow-soft-3d border border-white/[0.03]">
-            <div className="absolute top-0 right-0 p-8 z-[1000] pointer-events-none opacity-5">
-                <Scan className="w-32 h-32 text-brand-purple" />
+        <div className="bg-white rounded-[24px] relative overflow-hidden h-full flex flex-col shadow-premium border border-black/5">
+            <div className="absolute top-0 right-0 p-8 z-[1000] pointer-events-none opacity-[0.03]">
+                <Scan className="w-48 h-48 text-[#1D1D1F]" />
             </div>
 
             <div className="flex-1 relative">
@@ -349,19 +349,19 @@ export default function SitesPage() {
                         <LocateMe onLocate={(lat, lng) => setFlyTo({ lat, lng })} />
                     </MapContainer>
                 ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm border-2 border-dashed border-white/5">
-                        <Scan className="w-16 h-16 text-white/10 mb-6" />
-                        <h4 className="telemetry-label !mb-0 text-white/20">Select station for tactical link</h4>
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-[#F5F5F7]/80 backdrop-blur-md border border-black/5">
+                        <Scan className="w-16 h-16 text-black/10 mb-6" />
+                        <h4 className="telemetry-label font-bold text-[#86868B] !mb-0 tracking-widest text-center">Select station for tactical link</h4>
                     </div>
                 )}
 
                 {/* SEARCH INTERFACE OVERLAY */}
                 <div className="absolute top-6 right-6 w-80 z-[1000]">
                     <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-brand-purple transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B] group-focus-within:text-[#007AFF] transition-colors" />
                         <input
-                            className="bg-[#252634] border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder-white/10 focus:outline-none focus:border-brand-purple/50 shadow-soft-3d h-12 w-full font-bold"
-                            placeholder="SEARCH GLOBAL COORDINATES..."
+                            className="bg-white/90 backdrop-blur-md border border-black/10 rounded-[20px] pl-12 pr-4 text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#007AFF]/50 focus:ring-4 focus:ring-[#007AFF]/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-12 w-full font-bold"
+                            placeholder="SEARCH COORDINATES..."
                             value={searchQuery}
                             onChange={e => handleSearchSuggestions(e.target.value)}
                         />
@@ -373,12 +373,12 @@ export default function SitesPage() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 10 }}
-                                className="mt-2 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-3xl overflow-hidden"
+                                className="mt-2 bg-white/95 backdrop-blur-2xl border border-black/10 rounded-[20px] shadow-[0_20px_40px_rgba(0,0,0,0.2)] overflow-hidden"
                             >
                                 {searchResults.map((result, i) => (
                                     <button
                                         key={i}
-                                        className="w-full text-left p-4 text-[10px] text-white/60 hover:bg-brand-cyan/10 hover:text-brand-cyan border-b border-white/5 last:border-0 transition-all font-mono uppercase tracking-widest leading-relaxed"
+                                        className="w-full text-left p-4 text-[11px] font-bold text-[#86868B] hover:bg-[#007AFF]/5 hover:text-[#007AFF] border-b border-black/5 last:border-0 transition-all uppercase tracking-widest leading-relaxed"
                                         onClick={() => selectSearchResult(result)}
                                     >
                                         <p className="line-clamp-2 leading-relaxed">{result.display_name}</p>
@@ -396,27 +396,27 @@ export default function SitesPage() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[1000] py-4 px-8 bg-brand-cyan text-black rounded-full shadow-neon-cyan flex items-center gap-4 border-4 border-black/20"
+                            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[1000] py-4 px-8 bg-[#007AFF] text-white rounded-full shadow-[0_0_20px_rgba(0,122,255,0.4)] flex items-center gap-4 border-[3px] border-white"
                         >
                             <MousePointer2 className="w-5 h-5 animate-bounce" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em]">MANUAL_CAPTURE_ACTIVE</span>
+                            <span className="text-[11px] font-black uppercase tracking-[0.2em]">MANUAL_CAPTURE_ACTIVE</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
             
             {/* TACTICAL OVERLAY TEXT */}
-            <div className="p-6 bg-glass-gradient border-t border-white/10 flex justify-between items-center bg-black/20">
-                <div className="flex gap-4">
-                    <div className="w-1 h-8 bg-brand-purple animate-pulse" />
+            <div className="p-6 bg-[#F5F5F7]/80 backdrop-blur-md border-t border-black/5 flex justify-between items-center">
+                <div className="flex gap-4 items-center">
+                    <div className="w-1 h-8 bg-[#AF52DE] rounded-full animate-pulse" />
                     <div>
-                        <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest">Signal Strength</p>
-                        <p className="text-[10px] font-black text-brand-purple">ENCRYPTED // RELIABLE</p>
+                        <p className="text-[9px] font-bold text-[#86868B] uppercase tracking-widest">Signal Strength</p>
+                        <p className="text-[11px] font-black text-[#1D1D1F] tracking-tight">ENCRYPTED // RELIABLE</p>
                     </div>
                 </div>
                 <div className="text-right">
-                    <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest">Feed Status</p>
-                    <p className="text-[10px] font-black text-brand-purple tracking-widest uppercase animate-pulse">Live Link Established</p>
+                    <p className="text-[9px] font-bold text-[#86868B] uppercase tracking-widest">Feed Status</p>
+                    <p className="text-[11px] font-black text-[#34C759] tracking-widest uppercase animate-pulse">Live Link Established</p>
                 </div>
             </div>
         </div>
@@ -437,15 +437,15 @@ export default function SitesPage() {
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
               </div>
               
-              <div className="grid grid-cols-2 gap-6 bg-[#252634] p-6 rounded-3xl border border-white/5 shadow-inner">
+              <div className="grid grid-cols-2 gap-6 bg-[#F5F5F7] p-6 rounded-[24px] border border-black/5 shadow-inner">
                 <div>
-                  <label className="telemetry-label text-white/10 italic">Latitudinal Axis</label>
-                  <input className="bg-transparent border-0 text-brand-purple font-mono text-xl focus:ring-0 w-full p-0" placeholder="00.0000" type="number" step="any"
+                  <label className="telemetry-label text-[#86868B]">Latitudinal Axis</label>
+                  <input className="bg-transparent border-0 text-[#1D1D1F] font-mono text-xl focus:ring-0 w-full p-0 font-bold" placeholder="00.0000" type="number" step="any"
                     value={form.latitude} onChange={e => setForm(f => ({ ...f, latitude: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="telemetry-label text-white/10 italic">Longitudinal Axis</label>
-                  <input className="bg-transparent border-0 text-brand-purple font-mono text-xl focus:ring-0 w-full p-0" placeholder="00.0000" type="number" step="any"
+                  <label className="telemetry-label text-[#86868B]">Longitudinal Axis</label>
+                  <input className="bg-transparent border-0 text-[#1D1D1F] font-mono text-xl focus:ring-0 w-full p-0 font-bold" placeholder="00.0000" type="number" step="any"
                     value={form.longitude} onChange={e => setForm(f => ({ ...f, longitude: e.target.value }))} />
                 </div>
               </div>
