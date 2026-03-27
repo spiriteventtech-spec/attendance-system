@@ -50,12 +50,17 @@
 @layer components {
   .glass-panel {
     @apply bg-white/70 backdrop-blur-3xl border border-white/40 rounded-[var(--radius-ios)]
-           shadow-premium transition-all duration-300;
+           transition-all duration-300;
+    box-shadow: var(--shadow-premium);
   }
 
   .premium-card {
-    @apply bg-white rounded-[var(--radius-ios)] p-6 shadow-premium border border-black/[0.02] 
-           transition-all duration-300 hover:shadow-google;
+    @apply bg-white rounded-[var(--radius-ios)] p-6 border border-black/[0.02] 
+           transition-all duration-300;
+    box-shadow: var(--shadow-premium);
+  }
+  .premium-card:hover {
+    box-shadow: var(--shadow-google);
   }
 
   .btn-apple {
@@ -72,8 +77,11 @@
   .input-apple {
     @apply bg-black/[0.02] border border-transparent rounded-[12px] px-4 py-3 text-sm
            text-[#1D1D1F] placeholder-black/25 focus:outline-none focus:bg-white
-           focus:border-[var(--brand-primary)]/10 focus:ring-4 focus:ring-[var(--brand-primary)]/5 
            transition-all duration-200 w-full;
+  }
+  .input-apple:focus {
+    border-color: rgba(0, 122, 255, 0.1); /* --brand-primary at 10% */
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.05); /* ring-4 at 5% */
   }
 
   .telemetry-label {
