@@ -9,7 +9,12 @@ const { logSecurityEvent } = require('../utils/securityLogger');
 
 const router = express.Router();
 
-// ── POST /api/login ─────────────────────────────────────────
+/**
+ * ── POST /api/login ──────────────────────────────────────────
+ * Standard auth logic + Zero-Trust session conflict policy.
+ * Staff members are bound to a single device (X-Device-ID).
+ * Policy can be 'block_new' or 'terminate_old'.
+ */
 router.post('/login', [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
@@ -48,7 +53,7 @@ router.post('/login', [
         return res.status(403).json({
           error: 'SESSION_CONFLICT',
           code: 'DEVICE_ALREADY_BOUND',
-          message: 'This account is already bound to another device. Access from this device is blocked by security policy.',
+          message: 'Account bound to another device. Security policy blocks concurrent access.',
         });
       } else if (policy === 'terminate_old') {
         // Invalidate old session by updating fingerprint to new one immediately
@@ -66,9 +71,9 @@ router.post('/login', [
     }
 
     if (user.status === 'frozen')
-      return res.status(403).json({ error: 'Account is frozen. Contact your administrator.' });
+      return res.status(403).json({ error: 'Account is frozen. Contact administrator.' });
     if (user.status === 'archived')
-      return res.status(403).json({ error: 'Account has been deactivated.' });
+      return res.status(403).json({ error: 'Account deactivated.' });
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
@@ -89,135 +94,79 @@ router.post('/login', [
         lastName: user.last_name,
       }
     });
+
+    // Log successful login (audit trail)
+    logSecurityEvent({
+      userId: user.id,
+      eventType: 'login_success',
+      severity: 'info',
+      detail: { method: deviceId ? 'mobile' : 'web' },
+      ipAddress: req.ip
+    });
+
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// ── GET /api/me ──────────────────────────────────────────────
+/**
+ * ── GET /api/me ──────────────────────────────────────────────
+ * Unified profile fetch (Admin & Staff)
+ */
 router.get('/me', authenticate, async (req, res) => {
-  const { rows } = await query(
-    'SELECT id, email, role, status, first_name, last_name, phone, avatar_url FROM users WHERE id = $1',
-    [req.user.id]
-  );
-  res.json(rows[0]);
-});
-
-// ── GET /api/me/stats ────────────────────────────────────────
-router.get('/me/stats', authenticate, async (req, res) => {
   try {
-    const { rows } = await query(`
-      SELECT
-        COUNT(*) as total_sessions,
-        COALESCE(SUM(total_hours_worked), 0) as total_hours,
-        COALESCE(SUM(total_away_minutes), 0) as total_away_minutes,
-        COUNT(CASE WHEN status = 'overridden' THEN 1 END) as overridden_count
-      FROM attendance_logs
-      WHERE user_id = $1
-    `, [req.user.id]);
-    res.json(rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// ── POST /api/admin/users/freeze ─────────────────────────────
-router.post('/admin/users/freeze', authenticate, requireAdmin, [
-  body('userId').isUUID(),
-  body('freeze').isBoolean(),
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg || 'Validation failed' });
-
-  const { userId, freeze } = req.body;
-  try {
-    // Prevent admin from freezing themselves
-    if (userId === req.user.id)
-      return res.status(400).json({ error: 'Cannot change your own account status' });
-
-    const newStatus = freeze ? 'frozen' : 'active';
     const { rows } = await query(
-      `UPDATE users SET status = $1, updated_at = NOW()
-       WHERE id = $2 AND role != 'admin'
-       RETURNING id, email, status, first_name, last_name`,
-      [newStatus, userId]
-    );
-    if (!rows.length) return res.status(404).json({ error: 'User not found or is an admin' });
-    res.json({ message: `User ${freeze ? 'frozen' : 'unfrozen'} successfully`, user: rows[0] });
-  } catch (err) {
-    console.error('Freeze error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// ── POST /api/admin/users/archive ────────────────────────────
-router.post('/admin/users/archive', authenticate, requireAdmin, [
-  body('userId').isUUID(),
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg || 'Validation failed' });
-
-  const { userId } = req.body;
-  try {
-    if (userId === req.user.id)
-      return res.status(400).json({ error: 'Cannot archive your own account' });
-
-    const { rows } = await query(
-      `UPDATE users SET status = 'archived', updated_at = NOW()
-       WHERE id = $1 AND role != 'admin'
-       RETURNING id, email, status`,
-      [userId]
+      'SELECT id, email, role, first_name, last_name, status, device_fingerprint FROM users WHERE id = $1',
+      [req.user.sub]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
-    res.json({ message: 'User archived', user: rows[0] });
+    
+    const user = rows[0];
+    res.json({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      status: user.status,
+      deviceFingerprint: user.device_fingerprint
+    });
   } catch (err) {
+    console.error('Profile fetch error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// ── POST /api/admin/users/reset-password ─────────────────────
-router.post('/admin/users/reset-password', authenticate, requireAdmin, [
-  body('userId').isUUID(),
-  body('newPassword').isLength({ min: 8 }),
+/**
+ * ── POST /api/register ──────────────────────────────────────
+ * Internal user creation (usually Admin only in prod)
+ */
+router.post('/register', [
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6 }),
+  body('firstName').notEmpty(),
+  body('lastName').notEmpty(),
+  body('role').isIn(['staff', 'admin']),
 ], async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg || 'Validation failed' });
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { userId, newPassword } = req.body;
+  const { email, password, firstName, lastName, role } = req.body;
+
   try {
-    const hash = await bcrypt.hash(newPassword, 12);
+    const hash = await bcrypt.hash(password, 10);
     const { rows } = await query(
-      `UPDATE users SET password_hash = $1, updated_at = NOW()
-       WHERE id = $2
-       RETURNING id, email, first_name, last_name`,
-      [hash, userId]
+      `INSERT INTO users (email, password_hash, first_name, last_name, role)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, email, role`,
+      [email, hash, firstName, lastName, role || 'staff']
     );
-    if (!rows.length) return res.status(404).json({ error: 'User not found' });
-    res.json({ message: 'Password reset successfully', user: rows[0] });
+    res.status(201).json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// ── POST /api/change-password (self) ─────────────────────────
-router.post('/change-password', authenticate, [
-  body('currentPassword').notEmpty(),
-  body('newPassword').isLength({ min: 8 }),
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg || 'Validation failed' });
-
-  const { currentPassword, newPassword } = req.body;
-  try {
-    const { rows } = await query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
-    const valid = await bcrypt.compare(currentPassword, rows[0].password_hash);
-    if (!valid) return res.status(400).json({ error: 'Current password is incorrect' });
-
-    const hash = await bcrypt.hash(newPassword, 12);
-    await query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [hash, req.user.id]);
-    res.json({ message: 'Password updated successfully' });
-  } catch (err) {
+    if (err.code === '23505') {
+       return res.status(400).json({ error: 'EMAIL_ALREADY_EXISTS' });
+    }
+    console.error('Registration error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
