@@ -2,8 +2,13 @@
 -- SHIFT SCHEDULING (Zero-Trust Extension)
 -- ============================================================
 
--- Enable btree_gist for exclusion constraints on B-Tree types (UUID, etc)
-CREATE EXTENSION IF NOT EXISTS btree_gist;
+-- Enable btree_gist safely
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'btree_gist') THEN
+    CREATE EXTENSION btree_gist;
+  END IF;
+END $$;
 
 -- 1. Shifts Table
 CREATE TABLE IF NOT EXISTS shifts (
@@ -21,9 +26,9 @@ CREATE TABLE IF NOT EXISTS shifts (
     EXCLUDE USING gist (user_id WITH =, tstzrange(start_time, end_time) WITH &&)
 );
 
-CREATE INDEX idx_shifts_user_time ON shifts(user_id, start_time);
-CREATE INDEX idx_shifts_site      ON shifts(site_id);
-CREATE INDEX idx_shifts_status    ON shifts(status);
+CREATE INDEX IF NOT EXISTS idx_shifts_user_time ON shifts(user_id, start_time);
+CREATE INDEX IF NOT EXISTS idx_shifts_site      ON shifts(site_id);
+CREATE INDEX IF NOT EXISTS idx_shifts_status    ON shifts(status);
 
 -- 2. Link Attendance Logs to Shifts
 ALTER TABLE attendance_logs ADD COLUMN IF NOT EXISTS shift_id UUID REFERENCES shifts(id) ON DELETE SET NULL;

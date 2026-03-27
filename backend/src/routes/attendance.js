@@ -81,8 +81,8 @@ router.post('/checkin', authenticate, [
 
 // ── POST /api/attendance/checkout ────────────────────────────
 router.post('/checkout', authenticate, [
-  body('latitude').isFloat({ min: -90, max: 90 }),
-  body('longitude').isFloat({ min: -180, max: 180 }),
+  body('latitude').optional({ nullable: true }).isFloat({ min: -90, max: 90 }),
+  body('longitude').optional({ nullable: true }).isFloat({ min: -180, max: 180 }),
   body('note').trim().isLength({ min: 3, max: 500 }).withMessage('Check-out note is required (3-500 chars)'),
 ], async (req, res) => {
   const errors = validationResult(req);
@@ -93,7 +93,7 @@ router.post('/checkout', authenticate, [
   try {
     // 1. Find active session
     const { rows: logRows } = await query(`
-      SELECT al.*, ps.radius_meters, ps.location
+      SELECT al.*, ps.radius_meters, ps.location, ps.latitude as site_lat, ps.longitude as site_lng
       FROM attendance_logs al
       JOIN projects_sites ps ON ps.id = al.site_id
       WHERE al.user_id = $1 AND al.status = 'active'
@@ -104,14 +104,18 @@ router.post('/checkout', authenticate, [
 
     const log = logRows[0];
 
-    // 2. Close any open breach log if user is outside
+    // Use current lat/lng or fallback to site location for breach closing
+    const finalLat = latitude !== undefined && latitude !== null ? latitude : log.site_lat;
+    const finalLng = longitude !== undefined && longitude !== null ? longitude : log.site_lng;
+
+    // 2. Close any open breach log
     await query(`
       UPDATE breach_logs
       SET return_time = NOW(),
           return_lat = $2,
           return_lng = $3
       WHERE attendance_log_id = $1 AND return_time IS NULL
-    `, [log.id, latitude, longitude]);
+    `, [log.id, finalLat, finalLng]);
 
     // 3. Check out — triggers compute_hours_on_checkout
     const { rows } = await query(`
@@ -120,6 +124,10 @@ router.post('/checkout', authenticate, [
       WHERE id = $2
       RETURNING id, shift_id, check_in_time, check_out_time, total_hours_worked, total_away_minutes, status
     `, [note, log.id]);
+
+    if (!rows.length) {
+      throw new Error(`Failed to update attendance_log ID ${log.id}`);
+    }
 
     // 4. Update linked shift if applicable
     if (rows[0].shift_id) {
@@ -131,8 +139,8 @@ router.post('/checkout', authenticate, [
       log: rows[0]
     });
   } catch (err) {
-    console.error('Check-out error:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Check-out execution error:', err.message, { userId: req.user.id, logId: log?.id });
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
 
