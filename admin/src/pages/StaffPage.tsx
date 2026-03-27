@@ -239,28 +239,28 @@ export default function StaffPage() {
 
       {/* Create Modal */}
       <Modal open={createModal} onClose={() => setCreateModal(false)} title="Add New Staff Member">
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="label">First Name</label>
-              <input className="input" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} /></div>
-            <div><label className="label">Last Name</label>
-              <input className="input" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} /></div>
+            <div><label className="telemetry-label">First Name</label>
+              <input className="input-apple" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} /></div>
+            <div><label className="telemetry-label">Last Name</label>
+              <input className="input-apple" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} /></div>
           </div>
-          <div><label className="label">Email</label>
-            <input className="input" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
-          <div><label className="label">Password (min 8 chars)</label>
-            <input className="input" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} /></div>
-          <div><label className="label">Phone (optional)</label>
-            <input className="input" type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
-          <div><label className="label">Role</label>
-            <select className="input" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
+          <div><label className="telemetry-label">Email</label>
+            <input className="input-apple" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
+          <div><label className="telemetry-label">Password (min 8 chars)</label>
+            <input className="input-apple" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} /></div>
+          <div><label className="telemetry-label">Phone (optional)</label>
+            <input className="input-apple" type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+          <div><label className="telemetry-label">Role</label>
+            <select className="input-apple" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
               <option value="staff">Staff</option>
               <option value="admin">Admin</option>
             </select>
           </div>
-          <div className="flex gap-3 justify-end pt-2">
-            <button className="btn-ghost" onClick={() => setCreateModal(false)}>Cancel</button>
-            <button className="btn-primary" onClick={handleCreate} disabled={submitting}>
+          <div className="flex gap-3 justify-end pt-3">
+            <button className="btn-apple-secondary" onClick={() => setCreateModal(false)}>Cancel</button>
+            <button className="btn-apple" onClick={handleCreate} disabled={submitting}>
               {submitting ? <Spinner size="sm" /> : 'Create User'}
             </button>
           </div>
@@ -270,26 +270,26 @@ export default function StaffPage() {
       {/* Edit Modal */}
       <Modal open={!!editUser} onClose={() => setEditUser(null)} title="Edit Staff Member">
         {editUser && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="label">First Name</label>
-                <input className="input" value={editUser.first_name} onChange={e => setEditUser((u: any) => ({ ...u, first_name: e.target.value }))} /></div>
-              <div><label className="label">Last Name</label>
-                <input className="input" value={editUser.last_name} onChange={e => setEditUser((u: any) => ({ ...u, last_name: e.target.value }))} /></div>
+              <div><label className="telemetry-label">First Name</label>
+                <input className="input-apple" value={editUser.first_name} onChange={e => setEditUser((u: any) => ({ ...u, first_name: e.target.value }))} /></div>
+              <div><label className="telemetry-label">Last Name</label>
+                <input className="input-apple" value={editUser.last_name} onChange={e => setEditUser((u: any) => ({ ...u, last_name: e.target.value }))} /></div>
             </div>
-            <div><label className="label">Email</label>
-              <input className="input" type="email" value={editUser.email} onChange={e => setEditUser((u: any) => ({ ...u, email: e.target.value }))} /></div>
-            <div><label className="label">Phone</label>
-              <input className="input" type="tel" value={editUser.phone || ''} onChange={e => setEditUser((u: any) => ({ ...u, phone: e.target.value }))} /></div>
-            <div><label className="label">Role</label>
-              <select className="input" value={editUser.role} onChange={e => setEditUser((u: any) => ({ ...u, role: e.target.value }))}>
+            <div><label className="telemetry-label">Email</label>
+              <input className="input-apple" type="email" value={editUser.email} onChange={e => setEditUser((u: any) => ({ ...u, email: e.target.value }))} /></div>
+            <div><label className="telemetry-label">Phone</label>
+              <input className="input-apple" type="tel" value={editUser.phone || ''} onChange={e => setEditUser((u: any) => ({ ...u, phone: e.target.value }))} /></div>
+            <div><label className="telemetry-label">Role</label>
+              <select className="input-apple" value={editUser.role} onChange={e => setEditUser((u: any) => ({ ...u, role: e.target.value }))}>
                 <option value="staff">Staff</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
-            <div className="flex gap-3 justify-end pt-2">
-              <button className="btn-ghost" onClick={() => setEditUser(null)}>Cancel</button>
-              <button className="btn-primary" onClick={handleEdit} disabled={submitting}>
+            <div className="flex gap-3 justify-end pt-3">
+              <button className="btn-apple-secondary" onClick={() => setEditUser(null)}>Cancel</button>
+              <button className="btn-apple" onClick={handleEdit} disabled={submitting}>
                 {submitting ? <Spinner size="sm" /> : 'Save Changes'}
               </button>
             </div>
@@ -301,18 +301,18 @@ export default function StaffPage() {
       <Modal open={!!resetUser} onClose={() => setResetUser(null)} title="Reset Password">
         {resetUser && (
           <div className="space-y-4">
-            <p className="text-sm text-steel-400">
-              Setting a new password for <strong className="text-[#F1F5F9]">{resetUser.first_name} {resetUser.last_name}</strong>.
+            <p className="text-sm text-[#86868B] font-medium leading-relaxed">
+              Setting a new password for <strong className="text-[#1D1D1F]">{resetUser.first_name} {resetUser.last_name}</strong>.
               Please communicate the new password securely.
             </p>
             <div>
-              <label className="label">New Password (min 8 chars)</label>
-              <input className="input" type="password" value={resetPassword}
+              <label className="telemetry-label">New Password (min 8 chars)</label>
+              <input className="input-apple" type="password" value={resetPassword}
                 onChange={e => setResetPassword(e.target.value)} placeholder="••••••••" />
             </div>
-            <div className="flex gap-3 justify-end">
-              <button className="btn-ghost" onClick={() => setResetUser(null)}>Cancel</button>
-              <button className="btn-primary" onClick={handleResetPassword} disabled={submitting}>
+            <div className="flex gap-3 justify-end pt-3">
+              <button className="btn-apple-secondary" onClick={() => setResetUser(null)}>Cancel</button>
+              <button className="btn-apple bg-[#FF9500]" onClick={handleResetPassword} disabled={submitting}>
                 {submitting ? <Spinner size="sm" /> : 'Reset Password'}
               </button>
             </div>
@@ -324,7 +324,7 @@ export default function StaffPage() {
       <Modal open={!!statsUser} onClose={() => { setStatsUser(null); setStatsData(null); }} title="Staff Statistics">
         {statsUser && (
           <div className="space-y-4">
-            <p className="text-sm font-semibold text-[#F1F5F9]">{statsUser.first_name} {statsUser.last_name}</p>
+            <p className="text-sm font-semibold text-[#1D1D1F]">{statsUser.first_name} {statsUser.last_name}</p>
             {!statsData ? <div className="flex justify-center py-6"><Spinner /></div> : (
               <div className="grid grid-cols-2 gap-3">
                 {[
@@ -333,9 +333,9 @@ export default function StaffPage() {
                   { label: 'Total Away',     value: `${statsData.total_away_minutes || 0} min` },
                   { label: 'Overridden',     value: statsData.overridden_count },
                 ].map(s => (
-                  <div key={s.label} className="p-4 rounded-xl bg-[#0F172A] border border-[#334155]">
-                    <p className="text-xs text-steel-400 mb-1">{s.label}</p>
-                    <p className="text-xl font-bold text-[#F1F5F9]">{s.value}</p>
+                  <div key={s.label} className="p-4 rounded-3xl bg-black/[0.02] border border-black/5">
+                    <p className="text-[11px] font-bold tracking-tight text-[#86868B] uppercase mb-1">{s.label}</p>
+                    <p className="text-2xl font-bold text-[#1D1D1F]">{s.value}</p>
                   </div>
                 ))}
               </div>
