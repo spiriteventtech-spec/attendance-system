@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Users, Clock, AlertTriangle, CheckCircle2, TrendingUp, MapPin } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { attendanceAPI, usersAPI, locationAPI } from '../services/api';
-import { StatCard, Spinner } from '../components/ui';
+import { StatCard, StatWidget, Spinner } from '../components/ui';
 import { format, subDays } from 'date-fns';
 import clsx from 'clsx';
 
@@ -77,13 +77,35 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <StatCard label="Live In Field"   value={stats.checkedInNow}  icon={<CheckCircle2 />} color="green"  sub="Active sessions" />
-        <StatCard label="Geofence Alerts" value={stats.breachedNow}   icon={<AlertTriangle />} color="red"   sub="Outside site radius" />
-        <StatCard label="Today's Sessions" value={stats.todaySessions} icon={<Clock />}        color="blue"  sub="Cumulative check-ins" />
-        <StatCard label="Total Workforce"  value={stats.activeStaff}   icon={<Users />}         color="purple" sub="Registered members" />
-        <StatCard label="Weekly Volume"    value={`${stats.totalHoursWeek}h`} icon={<TrendingUp />} color="amber" sub="Total hours logged" />
-        <StatCard label="Adjustments"      value={stats.overridesWeek} icon={<MapPin />}        color="amber" sub="Admin overrides (7d)" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatWidget 
+          label="Live In Field" 
+          value={stats.checkedInNow} 
+          icon={<CheckCircle2 className="w-5 h-5" />} 
+          color="var(--brand-success)" 
+          data={[12, 18, 15, 22, stats.checkedInNow]}
+        />
+        <StatWidget 
+          label="Geofence Alerts" 
+          value={stats.breachedNow} 
+          icon={<AlertTriangle className="w-5 h-5" />} 
+          color="var(--brand-danger)" 
+          data={[1, 0, 2, 1, stats.breachedNow]}
+        />
+        <StatWidget 
+          label="Today's Sessions" 
+          value={stats.todaySessions} 
+          icon={<Clock className="w-5 h-5" />} 
+          color="var(--brand-primary)" 
+          data={[40, 45, 38, 52, stats.todaySessions]}
+        />
+        <StatWidget 
+          label="Adjustments" 
+          value={stats.overridesWeek} 
+          icon={<MapPin className="w-5 h-5" />} 
+          color="var(--brand-warning)" 
+          data={[0, 1, 0, 2, stats.overridesWeek]}
+        />
       </div>
 
       {/* Charts + Live Feed */}

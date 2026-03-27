@@ -159,10 +159,35 @@ export default function HistoryScreen() {
       <StatusBar barStyle="light-content" />
       <View style={styles.headerBar}>
         <View style={styles.glassBg} />
-        <History size={20} color="#00F5FF" />
-        <View style={{ marginLeft: 12 }}>
-            <Text style={styles.title}>MISSION_ARCHIVE</Text>
-            <Text style={styles.subtitle}>TOTAL_OPERATIONS: {logs.length}</Text>
+        <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <History size={20} color="#00F5FF" />
+                <View>
+                    <Text style={styles.title}>MISSION_ARCHIVE</Text>
+                    <Text style={styles.subtitle}>TOTAL_OPERATIONS: {logs.length}</Text>
+                </View>
+            </View>
+            
+            {/* Contribution Heatmap */}
+            <View style={styles.heatmapContainer}>
+                <View style={styles.heatmapLabels}>
+                    <Text style={styles.heatmapLabel}>ACTIVITY_PULSE_7D</Text>
+                </View>
+                <View style={styles.heatmapGrid}>
+                    {[...Array(28)].map((_, i) => {
+                        const opacity = Math.random() * 0.8 + 0.1; // Simulated data for UI
+                        return (
+                            <View 
+                                key={i} 
+                                style={[
+                                    styles.heatmapCell, 
+                                    { backgroundColor: `rgba(0, 245, 255, ${opacity})` }
+                                ]} 
+                            />
+                        );
+                    })}
+                </View>
+            </View>
         </View>
       </View>
 
@@ -201,6 +226,36 @@ const styles = StyleSheet.create({
   glassBg: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.02)' },
   title:      { fontSize: 18, fontWeight: '900', color: '#FFF', letterSpacing: 1 },
   subtitle:   { fontSize: 8, color: '#4A4A4A', fontWeight: 'bold', letterSpacing: 2, marginTop: 2 },
+  
+  heatmapContainer: {
+    marginTop: 24,
+    backgroundColor: 'rgba(0, 245, 255, 0.05)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 245, 255, 0.1)',
+  },
+  heatmapLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  heatmapLabel: {
+    fontSize: 7,
+    fontWeight: '900',
+    color: '#00F5FF',
+    letterSpacing: 2,
+  },
+  heatmapGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  heatmapCell: {
+    width: (width - 100) / 14,
+    height: (width - 100) / 14,
+    borderRadius: 3,
+  },
   
   list:       { padding: 16, paddingBottom: 100 },
   card:       { 

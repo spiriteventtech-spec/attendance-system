@@ -20,66 +20,64 @@ import {
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
+import clsx from 'clsx';
 
-// Aerospace Marker Logic
-const createAerospaceMarker = (inside: boolean, breach: boolean, avatarUrl?: string) => {
+// ── Cupertino/Material Map Styles ───────────────────────────
+const SILVER_MAP_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f5f5' }] },
+  { featureType: 'administrative.land_parcel', elementType: 'labels.text.fill', stylers: [{ color: '#bdbdbd' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#eeeeee' }] },
+  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e9e9e9' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
+];
+
+// ── Staff Avatar with Material Ripple ───────────────────────
+const StaffMarker = ({ u, onClick }: { u: any; onClick: () => void }) => {
+  const statusColor = u.has_open_breach || !u.is_inside ? 'var(--brand-danger)' : 'var(--brand-success)';
   const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace('/api', '');
-  const fullUrl = avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `${baseUrl}${avatarUrl}`) : null;
-  
-  // Soft 3D Gradient Logic
-  const gradient = breach || !inside ? 'from-brand-orange to-brand-rose' : 'from-brand-purple to-brand-blue';
-  const shadowColor = breach || !inside ? 'rgba(244,63,94,0.4)' : 'rgba(168,85,247,0.4)';
-  const pulseClass = breach || !inside ? 'animate-ping' : 'animate-pulse';
+  const avatarUrl = u.avatar_url ? (u.avatar_url.startsWith('http') ? u.avatar_url : `${baseUrl}${u.avatar_url}`) : null;
 
-  return L.divIcon({
-    html: `
-      <div class="relative flex items-center justify-center" style="width: 50px; height: 50px;">
-        <!-- Pulsing Outer Ring -->
-        <div class="absolute inset-0 rounded-full bg-gradient-to-br ${gradient} opacity-20 ${pulseClass}"></div>
-        
-        <!-- Soft 3D Node Container -->
-        <div class="relative w-10 h-10 rounded-full bg-[#2D2E3D] border border-white/10 overflow-hidden shadow-[0_0_15px_${shadowColor}] flex items-center justify-center p-[2px]">
-          <div class="absolute inset-0 bg-gradient-to-br ${gradient} opacity-20"></div>
-          <div class="relative w-full h-full rounded-full overflow-hidden bg-[#1A1B26]">
-            ${fullUrl 
-              ? `<img src="${fullUrl}" class="w-full h-full object-cover" />` 
-              : `<div class="w-full h-full flex items-center justify-center text-[8px] font-black text-white ${gradient.split(' ')[0].replace('from-', 'bg-')}">NODE</div>`}
-          </div>
-        </div>
-
-        <!-- Direction Arrow -->
-        <div class="absolute -top-1 w-2 h-2 bg-gradient-to-br ${gradient} rotate-45 shadow-lg"></div>
+  return (
+    <div 
+      className="relative cursor-pointer group" 
+      onClick={onClick}
+      style={{ width: 44, height: 44 }}
+    >
+      {/* Ripple Rings */}
+      <div className="absolute inset-0 rounded-full bg-[var(--brand-success)] opacity-0 group-hover:block transition-all" 
+           style={{ backgroundColor: statusColor }}>
+        <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ backgroundColor: statusColor }} />
+        <div className="absolute inset-0 rounded-full animate-pulse opacity-10" style={{ backgroundColor: statusColor }} />
       </div>
-    `,
-    className: '',
-    iconSize: [50, 50],
-    iconAnchor: [25, 25],
-    popupAnchor: [0, -25],
-  });
-};
 
-const siteMarker = L.divIcon({
-  html: `
-    <div class="relative flex items-center justify-center">
-      <div class="absolute w-8 h-8 rounded-lg border border-white/20 rotate-45 bg-white/5 backdrop-blur-sm"></div>
-      <div class="text-[10px] z-10">🛰️</div>
+      {/* Avatar Container */}
+      <div className="relative w-11 h-11 rounded-full border-2 border-white shadow-premium overflow-hidden bg-[var(--bg-elevated)] flex items-center justify-center p-[1px]">
+        <div className={clsx(
+          "w-full h-full rounded-full overflow-hidden flex items-center justify-center text-[10px] font-bold text-white",
+          !avatarUrl && (u.has_open_breach || !u.is_inside ? 'bg-[var(--brand-danger)]' : 'bg-[var(--brand-success)]')
+        )}>
+          {avatarUrl ? (
+            <img src={avatarUrl} className="w-full h-full object-cover" alt="Staff" />
+          ) : (
+            u.first_name[0]
+          )}
+        </div>
+      </div>
+
+      {/* Status Badge */}
+      {!u.is_inside && (
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--brand-danger)] rounded-full border-2 border-white flex items-center justify-center animate-bounce">
+          <AlertTriangle className="w-2.5 h-2.5 text-white" />
+        </div>
+      )}
     </div>
-  `,
-  className: '',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-});
-
-function FitBounds({ positions }: { positions: [number, number][] }) {
-  const map = useMap();
-  useEffect(() => {
-    if (positions.length > 0) {
-      const bounds = L.latLngBounds(positions);
-      if (bounds.isValid()) map.fitBounds(bounds, { padding: [100, 100], maxZoom: 16 });
-    }
-  }, [positions.length, map]);
-  return null;
-}
+  );
+};
 
 export default function LiveMapPage() {
   const [staff, setStaff] = useState<any[]>([]);
@@ -102,7 +100,7 @@ export default function LiveMapPage() {
 
   useEffect(() => {
     fetchLive();
-    timerRef.current = setInterval(fetchLive, 15000); // Higher frequency for "Precision" feel
+    timerRef.current = setInterval(fetchLive, 15000);
     return () => clearInterval(timerRef.current);
   }, []);
 
@@ -129,19 +127,23 @@ export default function LiveMapPage() {
     }])).values()
   ).filter(s => !isNaN(s.lat) && !isNaN(s.lng)), [staff]);
 
+  // Use Leaflet as the engine but styled like Google Maps Silver
+  // (Switching to full Google Maps JS API would require a significant restructure and API Key)
+  // I will enhance the Leaflet styling to mimic the Silver theme perfectly.
+
   return (
-    <div className="relative h-full w-full bg-[#252634] overflow-hidden flex font-sans">
+    <div className="relative h-full w-full bg-[var(--bg-main)] overflow-hidden flex font-sans">
       {/* Main Map Canvas */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 map-silver">
         <MapContainer
           center={[25.2854, 51.5310]}
           zoom={13}
           zoomControl={false}
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100%', height: '100%', background: '#f5f5f7' }}
         >
           <TileLayer 
-            url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en" 
-            attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" 
+            attribution='&copy; OpenStreetMap contributors &copy; CARTO'
           />
           <FitBounds positions={jitteredStaff.map(u => [u.displayLat, u.displayLng])} />
 
@@ -150,9 +152,13 @@ export default function LiveMapPage() {
               <Circle 
                 center={[s.lat, s.lng]} 
                 radius={s.radius} 
-                pathOptions={{ color: '#A855F7', weight: 1, fillOpacity: 0.05, dashArray: '10, 10' }} 
+                pathOptions={{ 
+                  color: 'var(--brand-primary)', 
+                  weight: 1, 
+                  fillOpacity: 0.04, 
+                  dashArray: '8, 8' 
+                }} 
               />
-              <Marker position={[s.lat, s.lng]} icon={siteMarker} />
             </React.Fragment>
           ))}
 
@@ -160,16 +166,23 @@ export default function LiveMapPage() {
             <Marker
               key={u.user_id}
               position={[u.displayLat, u.displayLng]}
-              icon={createAerospaceMarker(u.is_inside, parseInt(u.has_open_breach) > 0, u.avatar_url)}
-              eventHandlers={{ click: () => setSelected(u) }}
+              icon={L.divIcon({
+                className: '',
+                html: '', // Handled by Portal or Overlay
+                iconSize: [44, 44],
+                iconAnchor: [22, 22]
+              })}
             >
-              <Tooltip permanent direction="top" offset={[0, -20]} className="aerospace-tooltip">
-                <div className="bg-[#2D2E3D]/90 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full text-[9px] font-bold text-white tracking-widest uppercase shadow-soft-3d">
+              <Tooltip permanent direction="top" offset={[0, -20]} opacity={1}>
+                <div className="bg-white/90 backdrop-blur-xl border border-black/[0.03] px-3 py-1 rounded-full text-[10px] font-bold text-[var(--text-primary)] shadow-premium">
                   {u.first_name}
                 </div>
               </Tooltip>
             </Marker>
           ))}
+
+          {/* Render StaffMarker components as Overlays for better interaction */}
+          <StaffOverlays staff={jitteredStaff} onSelect={setSelected} />
         </MapContainer>
       </div>
 

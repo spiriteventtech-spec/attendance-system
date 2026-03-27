@@ -280,8 +280,6 @@ export default function CheckInScreen() {
           style={styles.map}
           provider={PROVIDER_GOOGLE}
           customMapStyle={MAP_STYLE}
-          // Note: Native Google Maps SDK follows device locale. 
-          // To force English, the device language must be set to English.
           initialRegion={{
             latitude: location?.latitude || 25.2854,
             longitude: location?.longitude || 51.5310,
@@ -294,10 +292,9 @@ export default function CheckInScreen() {
             <Circle
               center={{ latitude: activeLog.latitude, longitude: activeLog.longitude }}
               radius={activeLog.radius_meters}
-              strokeColor={isInside ? 'rgba(0, 245, 255, 0.4)' : 'rgba(255, 61, 0, 0.4)'}
-              fillColor={isInside ? 'rgba(0, 245, 255, 0.05)' : 'rgba(255, 61, 0, 0.05)'}
-              strokeWidth={1}
-              lineDashPattern={[5, 5]}
+              strokeColor={isInside ? 'rgba(0, 245, 255, 0.8)' : 'rgba(255, 61, 0, 0.8)'}
+              fillColor={isInside ? 'rgba(0, 245, 255, 0.15)' : 'rgba(255, 61, 0, 0.15)'}
+              strokeWidth={2}
             />
           )}
           {location && (
@@ -310,18 +307,21 @@ export default function CheckInScreen() {
           )}
         </MapView>
         
-        {/* Radar Overlay Decoration */}
+        {/* Aerospace HUD Overlays */}
         <View style={styles.radarOverlay} pointerEvents="none">
              <Animated.View style={[styles.scanLine, scanLineStyle]} />
-             <View style={styles.radarRingSmall} />
-             <View style={styles.radarRingLarge} />
+             <View style={styles.gridOverlay}>
+                {[1,2,3,4].map(i => <View key={i} style={[styles.radarRing, { width: i * 100, height: i * 100 }]} />)}
+             </View>
         </View>
 
-        {/* Geofence HUD */}
+        {/* Status HUD */}
         <View style={styles.hudTop}>
-            <View style={styles.hudBadge}>
-                <Navigation size={12} color="#00F5FF" />
-                <Text style={styles.hudText}>{isInside ? 'TARGET_IN_RANGE' : 'OUT_OF_SECTOR'}</Text>
+            <View style={[styles.hudBadge, { borderColor: isInside ? 'rgba(0, 245, 255, 0.3)' : 'rgba(255, 61, 0, 0.3)' }]}>
+                <View style={[styles.pulseDot, { backgroundColor: isInside ? '#00F5FF' : '#FF3D00' }]} />
+                <Text style={[styles.hudText, { color: isInside ? '#00F5FF' : '#FF3D00' }]}>
+                  {isInside ? 'GEOFENCE_ACTIVE' : 'OUT_OF_BOUNDS'}
+                </Text>
             </View>
         </View>
       </View>
@@ -449,8 +449,24 @@ const styles = StyleSheet.create({
   radarRingLarge: { width: 250, height: 250, borderRadius: 125, borderWidth: 1, borderColor: 'rgba(0, 245, 255, 0.03)' },
   
   hudTop: { position: 'absolute', top: 20, width: '100%', alignItems: 'center' },
-  hudBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.8)', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0, 245, 255, 0.2)' },
-  hudText: { color: '#00F5FF', fontSize: 10, fontWeight: 'bold', marginLeft: 8, letterSpacing: 1 },
+  hudBadge: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(0,0,0,0.8)', 
+    paddingHorizontal: 16, 
+    paddingVertical: 8, 
+    borderRadius: 20, 
+    borderWidth: 1, 
+    gap: 10
+  },
+  pulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  hudText: { fontSize: 10, fontWeight: '900', letterSpacing: 1.5 },
+  gridOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
+  radarRing: { position: 'absolute', borderRadius: 1000, borderWidth: 1, borderColor: 'rgba(0, 245, 255, 0.03)' },
 
   telemetryArea: { padding: 24, gap: 12 },
   telemetryRow: { flexDirection: 'row', gap: 12 },

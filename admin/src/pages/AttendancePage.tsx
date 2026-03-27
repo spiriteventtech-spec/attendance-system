@@ -1,10 +1,18 @@
 // src/pages/AttendancePage.tsx
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { 
+  createColumnHelper, 
+  flexRender, 
+  getCoreRowModel, 
+  useReactTable 
+} from '@tanstack/react-table';
 import { attendanceAPI, sitesAPI, usersAPI } from '../services/api';
-import { Badge, Modal, Spinner, FilterInput, FilterSelect, EmptyState } from '../components/ui';
-import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Badge, Modal, Spinner, FilterInput, EmptyState } from '../components/ui';
+import { SlidersHorizontal, ChevronLeft, ChevronRight, AlertCircle, ChevronDown, X } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import clsx from 'clsx';
 
 interface Log {
   id: string; user_id: string; site_id: string;
@@ -15,6 +23,161 @@ interface Log {
   status: string; override_comment?: string;
   breach_count: number;
 }
+
+// ── Filter Chip (Google Style) ────────────────────────────────
+const FilterChip = ({ 
+  label, value, active, children, onClear 
+}: { 
+  label: string; value: string; active?: boolean; 
+  children: React.ReactNode; onClear: () => void;
+}) => {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handle = (e: MouseEvent) => { if (open && !ref.current?.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <div 
+        onClick={() => setOpen(!open)}
+        className={clsx(
+          "flex items-center gap-2 px-4 py-2 rounded-full border text-[13px] font-medium transition-all cursor-pointer",
+          active 
+            ? "bg-[var(--brand-primary)]/10 border-[var(--brand-primary)]/20 text-[var(--brand-primary)]" 
+            : "bg-white border-black/[0.05] text-[var(--text-secondary)] hover:bg-black/[0.02]"
+        )}
+      >
+        <span>{label}: <span className={active ? "font-bold" : ""}>{value}</span></span>
+        <ChevronDown className={clsx("w-3.5 h-3.5 transition-transform", open && "rotate-180")} />
+        {active && (
+           <button 
+             onClick={(e) => { e.stopPropagation(); onClear(); }}
+             className="hover:text-[var(--brand-primary)]/60"
+           >
+             <X className="w-3 h-3" />
+           </button>
+        )}
+      </div>
+      
+      <AnimatePresence>
+        {open && (
+           <motion.div 
+             initial={{ opacity: 0, y: 10, scale: 0.95 }}
+             animate={{ opacity: 1, y: 0, scale: 1 }}
+             exit={{ opacity: 0, y: 10, scale: 0.95 }}
+             className="absolute top-full left-0 mt-2 z-40 glass-panel !p-0 min-w-[240px] overflow-hidden shadow-2xl"
+           >
+             {children}
+           </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// ── Attendance Table Component ───────────────────────────────
+const columnHelper = createColumnHelper<Log>();
+
+const AttendanceTable = ({ data, onOverride, onNotes, onBreaches }: any) => {
+  const columns = useMemo(() => [
+    columnHelper.accessor(row => `${row.first_name} ${row.last_name}`, {
+      id: 'staff',
+      header: 'Staff Member',
+      cell: info => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[var(--brand-primary)]/5 flex items-center justify-center text-[var(--brand-primary)] text-[10px] font-bold">
+            {info.row.original.first_name[0]}{info.row.original.last_name[0]}
+          </div>
+          <div>
+            <p className="font-bold text-[var(--text-primary)] text-sm tracking-tight">{info.getValue()}</p>
+            <p className="text-[var(--text-secondary)] text-[11px] font-medium">{info.row.original.email}</p>
+          </div>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('site_name', {
+      header: 'Site',
+      cell: info => <span className="text-sm font-semibold text-[var(--text-primary)]">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('check_in_time', {
+      header: 'Check-In',
+      cell: info => <span className="text-xs font-medium text-[var(--text-primary)]">{info.getValue() ? format(new Date(info.getValue()), 'MMM d, HH:mm') : '—'}</span>,
+    }),
+    columnHelper.accessor('check_out_time', {
+      header: 'Check-Out',
+      cell: info => <span className="text-xs font-medium text-[var(--text-primary)]">{info.getValue() ? format(new Date(info.getValue()), 'MMM d, HH:mm') : '—'}</span>,
+    }),
+    columnHelper.accessor('total_hours_worked', {
+      header: 'Hours',
+      cell: info => (
+        <div>
+          <span className="text-sm font-bold text-[var(--brand-primary)]">{info.getValue() ? `${info.getValue()}h` : '—'}</span>
+          {(info.row.original.total_away_minutes || 0) > 30 && (
+            <p className="text-[9px] text-[var(--brand-danger)] font-bold">-{info.row.original.total_away_minutes}m deviation</p>
+          )}
+        </div>
+      ),
+    }),
+    columnHelper.accessor('status', {
+      header: 'Status',
+      cell: info => <Badge label={info.getValue()} />,
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: () => <div className="text-right">Actions</div>,
+      cell: info => (
+        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button className="btn-apple-secondary py-1 px-3 text-[11px] font-bold shadow-none" onClick={() => onNotes(info.row.original)}>Notes</button>
+          <button className="btn-apple py-1 px-3 text-[11px] font-bold shadow-none" onClick={() => onOverride(info.row.original)}>Override</button>
+          {info.row.original.breach_count > 0 && (
+            <button className="p-1.5 rounded-full bg-[var(--brand-danger)]/10 text-[var(--brand-danger)] hover:bg-[var(--brand-danger)]/20 transition-all" onClick={() => onBreaches(info.row.original)}>
+              <AlertCircle className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      ),
+    }),
+  ], [onOverride, onNotes, onBreaches]);
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead className="sticky top-0 z-10 bg-white/80 backdrop-blur-md">
+          {table.getHeaderGroups().map(headerGroup => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map(header => (
+                <th key={header.id} className="px-6 py-4 text-left text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-widest border-b border-black/[0.03]">
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody className="divide-y divide-black/[0.02]">
+          {table.getRowModel().rows.map(row => (
+            <tr key={row.id} className="hover:bg-[var(--bg-main)] transition-all duration-200 group">
+              {row.getVisibleCells().map(cell => (
+                <td key={cell.id} className="px-6 py-5">
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 export default function AttendancePage() {
   const [logs,       setLogs]      = useState<Log[]>([]);
@@ -29,7 +192,10 @@ export default function AttendancePage() {
     siteId: '', userId: '', startDate: '', endDate: '',
     status: '', minHours: '',
   });
-  const setFilter = (key: string, val: string) => setFilters(f => ({ ...f, [key]: val }));
+  const setFilter = (key: string, val: string) => {
+    setFilters(f => ({ ...f, [key]: val }));
+    setPage(1);
+  };
 
   // Modals
   const [overrideLog,   setOverrideLog]  = useState<Log | null>(null);
@@ -94,145 +260,85 @@ export default function AttendancePage() {
   };
 
   const totalPages = Math.ceil(total / 25);
-  const fmt = (dt?: string) => dt ? format(new Date(dt), 'MMM d, HH:mm') : '—';
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#1D1D1F] tracking-tight">Attendance</h1>
-          <p className="text-base text-[#86868B] font-medium mt-1">{total} session records</p>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Attendance</h1>
+          <p className="text-base text-[var(--text-secondary)] font-medium mt-1">{total} session records</p>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="premium-card">
-        <div className="flex items-center gap-2 mb-6">
-          <SlidersHorizontal className="w-4 h-4 text-[#007AFF]" />
-          <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider">Search Filters</span>
+      {/* Filter Chips (Google Style) */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex items-center gap-2 mr-4">
+          <SlidersHorizontal className="w-4 h-4 text-[var(--brand-primary)]" />
+          <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Filters</span>
         </div>
-        <div className="flex flex-wrap gap-6">
-          <FilterSelect
-            label="Location"
-            value={filters.siteId}
-            onChange={v => setFilter('siteId', v)}
-            options={[{ value: '', label: 'All Sites' }, ...sites.map(s => ({ value: s.id, label: s.name }))]}
-          />
-          <FilterSelect
-            label="Member"
-            value={filters.userId}
-            onChange={v => setFilter('userId', v)}
-            options={[{ value: '', label: 'All Staff' }, ...staffList.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name}` }))]}
-          />
-          <FilterInput label="Start Date" type="date" value={filters.startDate} onChange={v => setFilter('startDate', v)} />
-          <FilterInput label="End Date"   type="date" value={filters.endDate}   onChange={v => setFilter('endDate', v)} />
-          <FilterSelect
-            label="Filter Status"
-            value={filters.status}
-            onChange={v => setFilter('status', v)}
-            options={[
-              { value: '', label: 'All Statuses' },
-              { value: 'active',     label: 'Active' },
-              { value: 'completed',  label: 'Completed' },
-              { value: 'overridden', label: 'Overridden' },
-            ]}
-          />
-          <div className="flex items-end">
-            <button className="btn-apple-secondary shadow-none px-6" onClick={() => { setFilters({ siteId:'', userId:'', startDate:'', endDate:'', status:'', minHours:'' }); setPage(1); }}>
-              Reset
-            </button>
+        
+        <FilterChip 
+          label="Site" 
+          value={sites.find(s => s.id === filters.siteId)?.name || 'All Sites'} 
+          active={!!filters.siteId}
+          onClear={() => setFilter('siteId', '')}
+        >
+          <div className="p-2 space-y-1">
+            <button key="all" className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-black/[0.03]" onClick={() => setFilter('siteId', '')}>All Sites</button>
+            {sites.map(s => (
+              <button key={s.id} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-black/[0.03]" onClick={() => setFilter('siteId', s.id)}>{s.name}</button>
+            ))}
           </div>
-        </div>
+        </FilterChip>
+
+        <FilterChip 
+          label="Status" 
+          value={filters.status || 'All Statuses'} 
+          active={!!filters.status}
+          onClear={() => setFilter('status', '')}
+        >
+          <div className="p-2 space-y-1">
+            {['All Statuses', 'Active', 'Completed', 'Overridden'].map(s => (
+              <button key={s} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-black/[0.03]" onClick={() => setFilter('status', s === 'All Statuses' ? '' : s.toLowerCase())}>{s}</button>
+            ))}
+          </div>
+        </FilterChip>
+
+        <FilterChip 
+          label="Date Range" 
+          value={filters.startDate ? `${filters.startDate} → ${filters.endDate || 'Now'}` : 'Anytime'} 
+          active={!!filters.startDate}
+          onClear={() => { setFilter('startDate', ''); setFilter('endDate', ''); }}
+        >
+          <div className="p-4 space-y-4 w-64" onClick={(e) => e.stopPropagation()}>
+            <FilterInput label="Start" type="date" value={filters.startDate} onChange={v => setFilter('startDate', v)} />
+            <FilterInput label="End" type="date" value={filters.endDate} onChange={v => setFilter('endDate', v)} />
+          </div>
+        </FilterChip>
       </div>
 
-      {/* Table */}
-      <div className="premium-card !p-0 overflow-hidden">
+      {/* TanStack Table (Frictionless, Blurred Header) */}
+      <div className="premium-card !p-0 overflow-hidden min-h-[400px]">
         {loading ? (
           <div className="flex justify-center py-24"><Spinner /></div>
         ) : logs.length === 0 ? (
           <EmptyState message="No attendance records match your criteria." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-black/[0.02]">
-                  <th className="px-6 py-4 text-left text-[11px] font-bold text-[#86868B] uppercase tracking-widest border-b border-black/[0.03]">Staff Member</th>
-                  <th className="px-6 py-4 text-left text-[11px] font-bold text-[#86868B] uppercase tracking-widest border-b border-black/[0.03]">Assigned Site</th>
-                  <th className="px-6 py-4 text-left text-[11px] font-bold text-[#86868B] uppercase tracking-widest border-b border-black/[0.03]">Check-In</th>
-                  <th className="px-6 py-4 text-left text-[11px] font-bold text-[#86868B] uppercase tracking-widest border-b border-black/[0.03]">Check-Out</th>
-                  <th className="px-6 py-4 text-left text-[11px] font-bold text-[#86868B] uppercase tracking-widest border-b border-black/[0.03]">Hours</th>
-                  <th className="px-6 py-4 text-left text-[11px] font-bold text-[#86868B] uppercase tracking-widest border-b border-black/[0.03]">Status</th>
-                  <th className="px-6 py-4 text-right text-[11px] font-bold text-[#86868B] uppercase tracking-widest border-b border-black/[0.03]">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/[0.02]">
-                {logs.map(log => (
-                  <tr key={log.id} className="hover:bg-[#F5F5F7] transition-all duration-200 group">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#007AFF]/5 flex items-center justify-center text-[#007AFF] text-[10px] font-bold">
-                          {log.first_name[0]}{log.last_name[0]}
-                        </div>
-                        <div>
-                          <p className="font-bold text-[#1D1D1F] text-sm tracking-tight">{log.first_name} {log.last_name}</p>
-                          <p className="text-[#86868B] text-[11px] font-medium">{log.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <p className="text-sm font-semibold text-[#1D1D1F] tracking-tight">{log.site_name}</p>
-                    </td>
-                    <td className="px-6 py-5">
-                      <p className="text-xs font-medium text-[#1D1D1F]">{fmt(log.check_in_time)}</p>
-                    </td>
-                    <td className="px-6 py-5">
-                      <p className="text-xs font-medium text-[#1D1D1F]">{fmt(log.check_out_time)}</p>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="text-sm font-bold text-[#007AFF]">
-                        {log.total_hours_worked ? `${log.total_hours_worked}h` : '—'}
-                      </span>
-                      {(log.total_away_minutes || 0) > 30 && (
-                        <p className="text-[10px] text-[#FF3B30] font-bold mt-0.5">-{log.total_away_minutes}m away</p>
-                      )}
-                    </td>
-                    <td className="px-6 py-5">
-                      <Badge label={log.status} />
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="btn-apple-secondary py-1 px-3 text-[11px] font-bold shadow-none" onClick={() => setDetailLog(log)}>
-                          Notes
-                        </button>
-                        <button className="btn-apple py-1 px-3 text-[11px] font-bold shadow-none" onClick={() => openOverride(log)}>
-                          Override
-                        </button>
-                        {log.breach_count > 0 && (
-                          <button className="p-1.5 rounded-full bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20 transition-all" onClick={() => openBreaches(log)}>
-                            <AlertCircle className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AttendanceTable data={logs} onOverride={openOverride} onNotes={setDetailLog} onBreaches={openBreaches} />
         )}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between py-4">
-          <p className="text-[13px] font-medium text-[#86868B]">
-            Page <span className="text-[#1D1D1F] font-bold">{page}</span> of <span className="text-[#1D1D1F] font-bold">{totalPages}</span>
+          <p className="text-[13px] font-medium text-[var(--text-secondary)]">
+            Page <span className="text-[var(--text-primary)] font-bold">{page}</span> of <span className="text-[var(--text-primary)] font-bold">{totalPages}</span>
           </p>
           <div className="flex gap-2">
-            <button className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-black/[0.03] text-[#86868B] hover:text-[#1D1D1F] transition-all disabled:opacity-30" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page === 1}>
+            <button className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-black/[0.03] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all disabled:opacity-30 shadow-sm" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page === 1}>
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-black/[0.03] text-[#86868B] hover:text-[#1D1D1F] transition-all disabled:opacity-30" onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page === totalPages}>
+            <button className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-black/[0.03] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all disabled:opacity-30 shadow-sm" onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page === totalPages}>
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
@@ -243,7 +349,7 @@ export default function AttendancePage() {
       <Modal open={!!overrideLog} onClose={() => setOverrideLog(null)} title="Record Override">
         {overrideLog && (
           <div className="space-y-6">
-            <div className="p-4 rounded-2xl bg-[#FF9500]/5 border border-[#FF9500]/10 text-sm font-medium text-[#FF9500] leading-relaxed">
+            <div className="p-4 rounded-2xl bg-[var(--brand-warning)]/5 border border-[var(--brand-warning)]/10 text-sm font-medium text-[var(--brand-warning)] leading-relaxed">
               Updating historical records documentation for <strong>{overrideLog.first_name} {overrideLog.last_name}</strong>.
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -269,7 +375,7 @@ export default function AttendancePage() {
             </div>
             <div className="flex gap-3 justify-end pt-4">
               <button className="btn-apple-secondary" onClick={() => setOverrideLog(null)}>Cancel</button>
-              <button className="btn-apple bg-[#FF9500]" onClick={submitOverride} disabled={submitting}>
+              <button className="btn-apple bg-[var(--brand-warning)]" onClick={submitOverride} disabled={submitting}>
                 {submitting ? <Spinner size="sm" /> : 'Confirm Override'}
               </button>
             </div>
@@ -282,20 +388,43 @@ export default function AttendancePage() {
           <div className="space-y-8">
             <div className="space-y-2">
               <label className="telemetry-label">Check-In Notes</label>
-              <div className="p-5 rounded-2xl bg-[#F5F5F7] text-sm text-[#1D1D1F] font-medium leading-relaxed italic border border-black/[0.02]">
+              <div className="p-5 rounded-2xl bg-[var(--bg-main)] text-sm text-[var(--text-primary)] font-medium leading-relaxed italic border border-black/[0.02]">
                 "{detailLog.check_in_note || 'No transcript available'}"
               </div>
             </div>
             {detailLog.check_out_note && (
               <div className="space-y-2">
                 <label className="telemetry-label">Check-Out Notes</label>
-                <div className="p-5 rounded-2xl bg-[#F5F5F7] text-sm text-[#1D1D1F] font-medium leading-relaxed italic border border-black/[0.02]">
+                <div className="p-5 rounded-2xl bg-[var(--bg-main)] text-sm text-[var(--text-primary)] font-medium leading-relaxed italic border border-black/[0.02]">
                   "{detailLog.check_out_note}"
                 </div>
               </div>
             )}
           </div>
         )}
+      </Modal>
+
+      <Modal open={!!breachLog} onClose={() => setBreachLog(null)} title="Security Incidents" wide>
+        <div className="space-y-4">
+           {breaches.length === 0 ? <EmptyState message="No perimeter breaches recorded for this session." /> : (
+             <div className="grid gap-4">
+               {breaches.map((b: any, idx: number) => (
+                 <div key={idx} className="p-4 rounded-2xl bg-[var(--brand-danger)]/5 border border-[var(--brand-danger)]/10 flex justify-between items-center">
+                   <div className="flex items-center gap-4">
+                     <AlertCircle className="w-5 h-5 text-[var(--brand-danger)]" />
+                     <div>
+                       <p className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-tight">Perimeter Breach</p>
+                       <p className="text-[11px] text-[var(--text-secondary)] font-medium">{format(new Date(b.timestamp), 'MMM d, HH:mm:ss')}</p>
+                     </div>
+                   </div>
+                   <div className="text-right">
+                     <p className="text-xs font-black text-[var(--brand-danger)]">{Math.round(b.distance_meters)}M DEVIATION</p>
+                   </div>
+                 </div>
+               ))}
+             </div>
+           )}
+        </div>
       </Modal>
     </div>
   );

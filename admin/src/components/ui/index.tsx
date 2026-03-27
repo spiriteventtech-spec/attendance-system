@@ -100,6 +100,42 @@ export const StatCard = ({
   );
 };
 
+// ── Stat Widget (iOS Style) ───────────────────────────────────
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
+
+export const StatWidget = ({
+  label, value, icon, color, data,
+}: {
+  label: string; value: React.ReactNode; icon: React.ReactNode;
+  color: string; data: number[];
+}) => (
+  <div className="premium-card !p-5 flex flex-col justify-between h-[180px] hover:scale-[1.02] active:scale-[0.98]">
+    <div className="flex justify-between items-start">
+      <div className="p-2.5 rounded-2xl bg-black/[0.03] text-[#1D1D1F]">
+        {icon}
+      </div>
+      <div className="w-16 h-8">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data.map(v => ({ v }))}>
+            <Line 
+              type="monotone" 
+              dataKey="v" 
+              stroke={color} 
+              strokeWidth={3} 
+              dot={false} 
+              animationDuration={1500}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+    <div>
+      <p className="text-[12px] font-bold text-[#86868B] tracking-tight mb-0.5 uppercase">{label}</p>
+      <p className="text-4xl font-bold text-[#1D1D1F] tracking-tighter">{value}</p>
+    </div>
+  </div>
+);
+
 // ── Confirm Dialog ────────────────────────────────────────────
 export const ConfirmDialog = ({
   open, onClose, onConfirm, title, message, variant = 'danger', loading = false,

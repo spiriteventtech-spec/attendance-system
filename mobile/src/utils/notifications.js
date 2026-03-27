@@ -28,7 +28,7 @@ export async function registerForPushNotificationsAsync() {
     
     try {
       token = (await Notifications.getExpoPushTokenAsync({
-        projectId: 'your-eas-project-id', // Replace with your actual project ID from app.json if needed
+        projectId: '20343d09-4376-4fa1-b120-e5a57ffc8ee6',
       })).data;
       console.log('Push Token:', token);
     } catch (e) {
