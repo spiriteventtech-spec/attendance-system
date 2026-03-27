@@ -105,11 +105,17 @@ const AttendanceTable = ({ data, onOverride, onNotes, onBreaches }: any) => {
     }),
     columnHelper.accessor('check_in_time', {
       header: 'Check-In',
-      cell: info => <span className="text-xs font-medium text-[var(--text-primary)]">{info.getValue() ? format(new Date(info.getValue()), 'MMM d, HH:mm') : '—'}</span>,
+      cell: info => {
+        const val = info.getValue();
+        return <span className="text-xs font-medium text-[var(--text-primary)]">{val ? format(new Date(val), 'MMM d, HH:mm') : '—'}</span>;
+      },
     }),
     columnHelper.accessor('check_out_time', {
       header: 'Check-Out',
-      cell: info => <span className="text-xs font-medium text-[var(--text-primary)]">{info.getValue() ? format(new Date(info.getValue()), 'MMM d, HH:mm') : '—'}</span>,
+      cell: info => {
+        const val = info.getValue();
+        return <span className="text-xs font-medium text-[var(--text-primary)]">{val ? format(new Date(val), 'MMM d, HH:mm') : '—'}</span>;
+      },
     }),
     columnHelper.accessor('total_hours_worked', {
       header: 'Hours',

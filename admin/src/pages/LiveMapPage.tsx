@@ -1,5 +1,6 @@
 // src/pages/LiveMapPage.tsx
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,6 +23,19 @@ import { format, formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 
+// ── Staff Marker Portal ──────────────────────────────────────
+const StaffMarkerPortal = ({ u, onClick }: { u: any; onClick: () => void }) => {
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const el = document.getElementById(`marker-${u.user_id}`);
+    if (el) setContainer(el);
+  }, [u.user_id]);
+
+  if (!container) return null;
+  return createPortal(<StaffMarker u={u} onClick={onClick} />, container);
+};
+
 // ── Cupertino/Material Map Styles ───────────────────────────
 const SILVER_MAP_STYLE = [
   { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
@@ -35,6 +49,53 @@ const SILVER_MAP_STYLE = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e9e9e9' }] },
   { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
 ];
+
+// ── Fit Bounds Helper ──────────────────────────────────────
+const FitBounds = ({ positions }: { positions: [number, number][] }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (positions.length > 0) {
+      const bounds = L.latLngBounds(positions);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+    }
+  }, [positions, map]);
+  return null;
+};
+
+// ── Staff Overlays (Portal-like for StaffMarkers) ────────────
+const StaffOverlays = ({ staff, onSelect }: { staff: any[]; onSelect: (u: any) => void }) => {
+  return (
+    <>
+      {staff.map(u => (
+        <Marker
+          key={`overlay-${u.user_id}`}
+          position={[u.displayLat, u.displayLng]}
+          icon={L.divIcon({
+            className: 'custom-div-icon',
+            html: '', // We render the component inside the divIcon or via a Portal/Custom component. 
+            // However, in Leaflet, the easiest performant way is DivIcon + ReactDOMServer or just simple CSS markers.
+            // For this UI, we'll use Marker with custom CSS classes.
+            iconSize: [44, 44],
+            iconAnchor: [22, 22]
+          })}
+        >
+          <Popup className="premium-popup">
+             <div className="p-2 min-w-[120px]">
+                <p className="font-bold text-sm">{u.first_name} {u.last_name}</p>
+                <p className="text-[10px] text-gray-500 uppercase font-medium">{u.site_name}</p>
+                <button 
+                  className="btn-apple-secondary w-full mt-3 py-1.5 text-[11px]"
+                  onClick={() => onSelect(u)}
+                >
+                  View Intel
+                </button>
+             </div>
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+};
 
 // ── Staff Avatar with Material Ripple ───────────────────────
 const StaffMarker = ({ u, onClick }: { u: any; onClick: () => void }) => {
@@ -167,11 +228,14 @@ export default function LiveMapPage() {
               key={u.user_id}
               position={[u.displayLat, u.displayLng]}
               icon={L.divIcon({
-                className: '',
-                html: '', // Handled by Portal or Overlay
+                className: 'marker-clear',
+                html: `<div id="marker-${u.user_id}" class="marker-container"></div>`,
                 iconSize: [44, 44],
                 iconAnchor: [22, 22]
               })}
+              eventHandlers={{
+                click: () => setSelected(u)
+              }}
             >
               <Tooltip permanent direction="top" offset={[0, -20]} opacity={1}>
                 <div className="bg-white/90 backdrop-blur-xl border border-black/[0.03] px-3 py-1 rounded-full text-[10px] font-bold text-[var(--text-primary)] shadow-premium">
@@ -181,7 +245,12 @@ export default function LiveMapPage() {
             </Marker>
           ))}
 
-          {/* Render StaffMarker components as Overlays for better interaction */}
+          {/* Render StaffMarker components as Overlays into the DivIcons via Portals */}
+          {jitteredStaff.map(u => (
+            <StaffMarkerPortal key={`portal-${u.user_id}`} u={u} onClick={() => setSelected(u)} />
+          ))}
+
+          {/* Render StaffOverlays (Popups/Tooltips) into the map */}
           <StaffOverlays staff={jitteredStaff} onSelect={setSelected} />
         </MapContainer>
       </div>
