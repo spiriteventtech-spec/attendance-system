@@ -41,6 +41,19 @@ services:
       DB_PASSWORD: postgres_dev_password
       JWT_SECRET: change_this_in_production_use_a_long_random_value
       JWT_EXPIRES_IN: 8h
+      # ── AWS Rekognition (Selfie Verification) ──────────────
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      REKOGNITION_CONFIDENCE_THRESHOLD: 80
+      # ── SMTP Email Alerts ──────────────────────────────────
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      # ── Security Settings ──────────────────────────────────
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
     volumes:
       - uploads_data:/app/uploads
     ports:

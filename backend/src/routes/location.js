@@ -4,6 +4,25 @@ const { body, validationResult } = require('express-validator');
 const { query, withTransaction } = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 const { sendNotification } = require('../utils/notificationService');
+const { logSecurityEvent } = require('../utils/securityLogger');
+const { sendVelocityViolationAlert } = require('../utils/emailAlert');
+
+// Physically impossible speed threshold (km/h) — anything above this is spoofing
+const MAX_SPEED_KPH = 300;
+
+/**
+ * Calculate speed in km/h between two GPS points given time difference in ms.
+ */
+function calculateSpeedKph(lat1, lon1, lat2, lon2, timeDiffMs) {
+  if (!timeDiffMs || timeDiffMs <= 0) return 0;
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+  const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return (distKm / (timeDiffMs / 3_600_000)); // distance / time in hours
+}
 
 const router = express.Router();
 
@@ -14,13 +33,92 @@ router.post('/ping', authenticate, [
   body('latitude').isFloat({ min: -90, max: 90 }),
   body('longitude').isFloat({ min: -180, max: 180 }),
   body('accuracy').optional().isFloat({ min: 0 }),
+  body('isMockLocation').optional().isBoolean(),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { latitude, longitude, accuracy } = req.body;
+  const { latitude, longitude, accuracy, isMockLocation } = req.body;
+
+  // ── MOCK LOCATION DETECTION ──────────────────────────────────────────
+  if (isMockLocation === true) {
+    await logSecurityEvent({
+      userId: req.user.id,
+      eventType: 'mock_location',
+      severity: 'critical',
+      detail: { latitude, longitude, device: req.headers['x-device-id'] },
+      ipAddress: req.ip,
+    });
+    return res.status(403).json({
+      error: 'MOCK_LOCATION_DETECTED',
+      code: 'GPS_SPOOFING',
+      message: 'Location tampering detected. This incident has been logged.',
+    });
+  }
 
   try {
+    // ── VELOCITY CHECK ───────────────────────────────────────────────────
+    // Get the last ping to check impossible travel speed
+    const { rows: lastPingRows } = await query(`
+      SELECT latitude, longitude, pinged_at
+      FROM location_pings
+      WHERE user_id = $1
+      ORDER BY pinged_at DESC
+      LIMIT 1
+    `, [req.user.id]);
+
+    if (lastPingRows.length) {
+      const last = lastPingRows[0];
+      const timeDiffMs = Date.now() - new Date(last.pinged_at).getTime();
+      const speedKph = calculateSpeedKph(
+        parseFloat(last.latitude), parseFloat(last.longitude),
+        latitude, longitude,
+        timeDiffMs
+      );
+
+      if (speedKph > MAX_SPEED_KPH) {
+        // Log the violation
+        await logSecurityEvent({
+          userId: req.user.id,
+          eventType: 'velocity_violation',
+          severity: 'critical',
+          detail: {
+            speedKph: speedKph.toFixed(1),
+            from: { lat: last.latitude, lng: last.longitude, time: last.pinged_at },
+            to: { lat: latitude, lng: longitude, time: new Date().toISOString() },
+            timeDiffMs,
+          },
+          ipAddress: req.ip,
+        });
+
+        // Notify all admins via email
+        try {
+          const { rows: admins } = await query(`SELECT email FROM users WHERE role = 'admin'`);
+          const { rows: workerRows } = await query(`SELECT first_name, last_name FROM users WHERE id = $1`, [req.user.id]);
+          const workerName = workerRows[0] ? `${workerRows[0].first_name} ${workerRows[0].last_name}` : 'Unknown';
+          await sendVelocityViolationAlert(admins.map(a => a.email), workerName, speedKph, req.user.id);
+        } catch (alertErr) {
+          console.error('[Velocity] Alert failed:', alertErr.message);
+        }
+
+        // Notify the user themselves
+        try {
+          const { rows: userRows } = await query('SELECT expo_push_token FROM users WHERE id = $1', [req.user.id]);
+          const pushToken = userRows[0]?.expo_push_token;
+          if (pushToken) {
+            const { sendNotification: sn } = require('../utils/notificationService');
+            await sn(pushToken, '🚀 GPS Anomaly Detected',
+              'Impossible travel speed detected. Your location has been flagged for review.',
+              { type: 'VELOCITY_VIOLATION' });
+          }
+        } catch {}
+
+        // Still return ok — we log, alert, but don't hard-block (ping is recorded with flag)
+        // Uncomment the line below to HARD-BLOCK instead:
+        // return res.status(403).json({ error: 'VELOCITY_VIOLATION', speedKph });
+      }
+    }
+
     // 1. Find active attendance session for user
     const { rows: sessions } = await query(`
       SELECT al.id as log_id, al.site_id,

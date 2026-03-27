@@ -13,6 +13,8 @@ const locationRoutes   = require('./routes/location');
 const userRoutes       = require('./routes/users');
 const reportRoutes     = require('./routes/reports');
 const announcementRoutes = require('./routes/announcements');
+const securityRoutes   = require('./routes/security');
+const { pruneExpiredNonces } = require('./middleware/replayProtection');
 const { query } = require('./config/db');
 
 const app  = express();
@@ -35,10 +37,13 @@ app.use(cors({
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: [
+    'Content-Type', 'Authorization', 'X-Requested-With',
+    'X-Device-ID', 'X-Nonce', 'X-Timestamp',  // Zero-Trust headers
+  ],
   credentials: true,
 }));
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '10mb' })); // 10mb for base64 selfie images
 app.use(morgan('dev'));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -85,6 +90,7 @@ app.use('/api/location',    locationRoutes);
 app.use('/api/admin/users', userRoutes);
 app.use('/api/reports',     reportRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/security',    securityRoutes);  // Zero-Trust security layer
 
 // ── 404 ───────────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ error: `Route ${req.method} ${req.path} not found` }));
@@ -99,5 +105,9 @@ app.listen(PORT, () => {
   console.log(`\n🚀 Attendance API running on http://localhost:${PORT}`);
   console.log(`   ENV: ${process.env.NODE_ENV}`);
   console.log(`   CORS: ${allowedOrigins.join(',')}`);
-  console.log(`   DB:  ${process.env.DATABASE_URL ? 'USING DATABASE_URL' : 'USING DIRECT ENV'}\n`);
+  console.log(`   DB:  ${process.env.DATABASE_URL ? 'USING DATABASE_URL' : 'USING DIRECT ENV'}`);
+  console.log(`   SECURITY: Zero-Trust Device Binding ACTIVE\n`);
+
+  // Prune expired nonces every 5 minutes
+  setInterval(pruneExpiredNonces, 5 * 60 * 1000);
 });

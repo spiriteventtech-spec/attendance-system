@@ -10,7 +10,6 @@ import Sidebar from './components/Sidebar';
 import { Spinner } from './components/ui';
 import Logo from './assets/logo-premium.png';
 
-// Lazy load pages for performance (LCP Optimization)
 const LoginPage      = React.lazy(() => import('./pages/LoginPage'));
 const DashboardPage  = React.lazy(() => import('./pages/DashboardPage'));
 const LiveMapPage    = React.lazy(() => import('./pages/LiveMapPage'));
@@ -19,9 +18,10 @@ const StaffPage      = React.lazy(() => import('./pages/StaffPage'));
 const SitesPage      = React.lazy(() => import('./pages/SitesPage'));
 const ReportsPage    = React.lazy(() => import('./pages/ReportsPage'));
 const SettingsPage   = React.lazy(() => import('./pages/SettingsPage'));
-const AnnouncementsPage = React.lazy(() => import('./pages/AnnouncementsPage'));
-const PersonalDashboard = React.lazy(() => import('./pages/PersonalDashboard'));
-const PersonalHistory   = React.lazy(() => import('./pages/PersonalHistory'));
+const AnnouncementsPage  = React.lazy(() => import('./pages/AnnouncementsPage'));
+const PersonalDashboard  = React.lazy(() => import('./pages/PersonalDashboard'));
+const PersonalHistory    = React.lazy(() => import('./pages/PersonalHistory'));
+const SecurityAuditPage  = React.lazy(() => import('./pages/SecurityAuditPage'));
 
 import { Outlet } from 'react-router-dom';
 
@@ -117,6 +117,7 @@ export default function App() {
             <Route path="/sites"         element={<SitesPage />} />
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/reports"       element={<ReportsPage />} />
+            <Route path="/security"      element={<SecurityAuditPage />} />
           </Route>
           
           {/* Staff Restricted Section */}

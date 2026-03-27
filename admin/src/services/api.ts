@@ -105,3 +105,21 @@ export const announcementsAPI = {
   delete: (id: string) =>
     api.delete(`/announcements/${id}`),
 };
+
+export const securityAPI = {
+  getAuditLog: (params?: Record<string, any>) =>
+    api.get('/security/audit-log', { params }),
+  generateQR: (siteId: string) =>
+    api.post('/security/generate-qr', { siteId }),
+  verifyQR: (token: string, latitude: number, longitude: number, note: string) =>
+    api.post('/security/verify-qr', { token, latitude, longitude, note }),
+  getSessionPolicy: () =>
+    api.get('/security/session-policy'),
+  setSessionPolicy: (policy: 'block_new' | 'terminate_old') =>
+    api.put('/security/session-policy', { policy }),
+  getStatus: () =>
+    api.get('/security/status'),
+  resetDeviceBinding: (userId: string) =>
+    api.delete(`/security/users/${userId}/device`),
+};
+

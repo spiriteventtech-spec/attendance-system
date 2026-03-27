@@ -5,6 +5,7 @@ const jwt     = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { query } = require('../config/db');
 const { authenticate, requireAdmin } = require('../middleware/auth');
+const { logSecurityEvent } = require('../utils/securityLogger');
 
 const router = express.Router();
 
@@ -17,14 +18,53 @@ router.post('/login', [
   if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg || 'Validation failed' });
 
   const { email, password } = req.body;
+  const deviceId = req.headers['x-device-id'];
+
   try {
     const { rows } = await query(
-      'SELECT id, email, password_hash, role, status, first_name, last_name FROM users WHERE email = $1',
+      'SELECT id, email, password_hash, role, status, first_name, last_name, device_fingerprint FROM users WHERE email = $1',
       [email]
     );
     if (!rows.length) return res.status(401).json({ error: 'Invalid credentials' });
 
     const user = rows[0];
+
+    // ── Zero-Trust Session Conflict Policy ───────────────────────────
+    if (user.role === 'staff' && user.device_fingerprint && deviceId && user.device_fingerprint !== deviceId) {
+      // Fetch policy from settings
+      const { rows: policyRows } = await query(
+        "SELECT value FROM system_settings WHERE key = 'session_conflict_policy'"
+      );
+      const policy = policyRows[0]?.value || 'block_new';
+
+      if (policy === 'block_new') {
+        await logSecurityEvent({
+          userId: user.id,
+          eventType: 'session_conflict',
+          severity: 'high',
+          detail: { attemptedDeviceId: deviceId.substring(0, 16) + '...', policy: 'block_new' },
+          ipAddress: req.ip,
+        });
+        return res.status(403).json({
+          error: 'SESSION_CONFLICT',
+          code: 'DEVICE_ALREADY_BOUND',
+          message: 'This account is already bound to another device. Access from this device is blocked by security policy.',
+        });
+      } else if (policy === 'terminate_old') {
+        // Invalidate old session by updating fingerprint to new one immediately
+        await query('UPDATE users SET device_fingerprint = $1, updated_at = NOW() WHERE id = $2', [deviceId, user.id]);
+        await logSecurityEvent({
+          userId: user.id,
+          eventType: 'session_terminated',
+          severity: 'medium',
+          detail: { newDeviceId: deviceId.substring(0, 16) + '...', oldDeviceId: user.device_fingerprint.substring(0, 16) + '...' },
+          ipAddress: req.ip,
+        });
+        // Update local object so login proceeds with new context
+        user.device_fingerprint = deviceId;
+      }
+    }
+
     if (user.status === 'frozen')
       return res.status(403).json({ error: 'Account is frozen. Contact your administrator.' });
     if (user.status === 'archived')
