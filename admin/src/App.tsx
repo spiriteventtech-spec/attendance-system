@@ -7,7 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Menu } from 'lucide-react';
 import { useAuthStore } from './store/authStore';
 import Sidebar from './components/Sidebar';
-import { Spinner, LoadingScreen } from './components/ui';
+import { Spinner } from './components/ui';
 import Logo from './assets/logo-premium.png';
 
 // Lazy load pages for performance (LCP Optimization)
@@ -23,7 +23,9 @@ const AnnouncementsPage = React.lazy(() => import('./pages/AnnouncementsPage'));
 const PersonalDashboard = React.lazy(() => import('./pages/PersonalDashboard'));
 const PersonalHistory   = React.lazy(() => import('./pages/PersonalHistory'));
 
-function Layout({ children }: { children: React.ReactNode }) {
+import { Outlet } from 'react-router-dom';
+
+function Layout() {
   const [isOpen, setIsOpen] = React.useState(false);
   const { user } = useAuthStore();
 
@@ -52,23 +54,28 @@ function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-x-hidden p-6 lg:p-10">
-          {children}
+          <React.Suspense fallback={<div className="animate-pulse bg-black/[0.02] rounded-[32px] w-full h-[600px]" />}>
+            <Outlet />
+          </React.Suspense>
         </main>
       </div>
     </div>
   );
 }
 
-function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
+function ProtectedRoute({ roles }: { roles?: string[] }) {
   const { user, loading } = useAuthStore();
+  
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <Spinner size="lg" />
     </div>
   );
+  
   if (!user) return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
-  return <Layout>{children}</Layout>;
+  
+  return <Layout />;
 }
 
 export default function App() {
@@ -94,29 +101,32 @@ export default function App() {
           error:   { iconTheme: { primary: '#FF3B30', secondary: '#FFFFFF' } },
         }}
       />
-      <React.Suspense fallback={<LoadingScreen />}>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        
+        {/* Main App Shell with persistent Sidebar/Layout */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={user?.role === 'admin' ? <DashboardPage /> : <PersonalDashboard />} />
+          <Route path="/settings" element={<SettingsPage />} />
           
-          <Route path="/" element={
-            <ProtectedRoute>
-              {user?.role === 'admin' ? <DashboardPage /> : <PersonalDashboard />}
-            </ProtectedRoute>
-          } />
+          {/* Admin Restricted Section */}
+          <Route element={<ProtectedRoute roles={['admin']} />}>
+            <Route path="/live-map"      element={<LiveMapPage />} />
+            <Route path="/attendance"    element={<AttendancePage />} />
+            <Route path="/staff"         element={<StaffPage />} />
+            <Route path="/sites"         element={<SitesPage />} />
+            <Route path="/announcements" element={<AnnouncementsPage />} />
+            <Route path="/reports"       element={<ReportsPage />} />
+          </Route>
+          
+          {/* Staff Restricted Section */}
+          <Route element={<ProtectedRoute roles={['staff']} />}>
+            <Route path="/history"       element={<PersonalHistory />} />
+          </Route>
+        </Route>
 
-          <Route path="/live-map"   element={<ProtectedRoute roles={['admin']}><LiveMapPage /></ProtectedRoute>} />
-          <Route path="/attendance" element={<ProtectedRoute roles={['admin']}><AttendancePage /></ProtectedRoute>} />
-          <Route path="/staff"      element={<ProtectedRoute roles={['admin']}><StaffPage /></ProtectedRoute>} />
-          <Route path="/sites"      element={<ProtectedRoute roles={['admin']}><SitesPage /></ProtectedRoute>} />
-          <Route path="/announcements" element={<ProtectedRoute roles={['admin']}><AnnouncementsPage /></ProtectedRoute>} />
-          <Route path="/reports"    element={<ProtectedRoute roles={['admin']}><ReportsPage /></ProtectedRoute>} />
-          
-          <Route path="/history"    element={<ProtectedRoute roles={['staff']}><PersonalHistory /></ProtectedRoute>} />
-          
-          <Route path="/settings"   element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-          <Route path="*"           element={<Navigate to="/" replace />} />
-        </Routes>
-      </React.Suspense>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }
