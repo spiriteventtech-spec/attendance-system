@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Menu } from 'lucide-react';
 import { useAuthStore } from './store/authStore';
 import Sidebar from './components/Sidebar';
@@ -74,17 +75,21 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <SpeedInsights />
       <Toaster
         position="top-right"
         toastOptions={{
           style: {
-            background: '#1E293B',
-            color: '#F1F5F9',
-            border: '1px solid #334155',
+            background: '#FFFFFF',
+            color: '#1D1D1F',
+            border: '1px solid rgba(0,0,0,0.06)',
+            borderRadius: '14px',
             fontSize: '13px',
+            fontWeight: 500,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
           },
-          success: { iconTheme: { primary: '#22C55E', secondary: '#1E293B' } },
-          error:   { iconTheme: { primary: '#EF4444', secondary: '#1E293B' } },
+          success: { iconTheme: { primary: '#34C759', secondary: '#FFFFFF' } },
+          error:   { iconTheme: { primary: '#FF3B30', secondary: '#FFFFFF' } },
         }}
       />
       <Routes>
