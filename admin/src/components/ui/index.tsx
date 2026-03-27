@@ -22,6 +22,9 @@ const badgeVariants: Record<string, string> = {
   outside:    'bg-[#FF3B30]/10 text-[#FF3B30]',
   admin:      'bg-[#5856D6]/10 text-[#5856D6]',
   staff:      'bg-black/5 text-black/60',
+  high:       'bg-[#FF3B30]/10 text-[#FF3B30]',
+  mid:        'bg-[#FF9500]/10 text-[#FF9500]',
+  low:        'bg-[#007AFF]/10 text-[#007AFF]',
 };
 
 export const Badge = ({ label, variant }: { label: string; variant?: string }) => (
