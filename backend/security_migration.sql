@@ -4,9 +4,10 @@
 -- Safe to run multiple times (all statements use IF NOT EXISTS / ON CONFLICT).
 -- =============================================================================
 
--- ── 1. Device Binding columns on users ───────────────────────────────────────
+-- ── 1. Device Binding + Push Notification columns on users ───────────────────
 ALTER TABLE users ADD COLUMN IF NOT EXISTS device_fingerprint TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS device_registered_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS expo_push_token TEXT;
 
 -- ── 2. Check-in method tracking on attendance_logs ───────────────────────────
 ALTER TABLE attendance_logs ADD COLUMN IF NOT EXISTS check_in_method TEXT DEFAULT 'standard';
