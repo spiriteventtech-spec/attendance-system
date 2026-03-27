@@ -1,7 +1,7 @@
 // src/pages/StaffPage.tsx
 import React, { useEffect, useState } from 'react';
 import { usersAPI, authAPI } from '../services/api';
-import { Badge, Modal, Spinner, FilterInput, FilterSelect, ConfirmDialog, EmptyState } from '../components/ui';
+import { Badge, Modal, Spinner, FilterInput, FilterSelect, ConfirmDialog, EmptyState, Skeleton } from '../components/ui';
 import { UserPlus, Search, Lock, Archive, Edit2, RotateCcw, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -41,7 +41,7 @@ export default function StaffPage() {
       setUsers(data.users);
       setTotal(data.total);
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 200);
     }
   };
 
@@ -155,7 +155,10 @@ export default function StaffPage() {
       {/* Table */}
       <div className="bg-white rounded-[24px] overflow-hidden border border-black/5 shadow-premium">
         {loading ? (
-          <div className="flex justify-center py-16"><Spinner /></div>
+          <div className="p-8 space-y-4">
+            <Skeleton className="w-full h-12 mb-4" />
+            {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="w-full h-16" />)}
+          </div>
         ) : users.length === 0 ? (
           <EmptyState message="No users match your filters." />
         ) : (

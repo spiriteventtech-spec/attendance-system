@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-import { Badge, Modal, Spinner, EmptyState } from '../components/ui';
+import { Badge, Modal, Spinner, EmptyState, Skeleton } from '../components/ui';
 import toast from 'react-hot-toast';
 
 function MapPicker({ onPick }: { onPick: (lat: number, lng: number) => void }) {
@@ -101,10 +101,10 @@ export default function SitesPage() {
   const fetchSites = async () => {
     setLoading(true);
     try {
-        const { data } = await sitesAPI.list();
-        setSites(data);
+      const { data } = await sitesAPI.list();
+      setSites(data);
     } finally {
-        setLoading(false);
+      setTimeout(() => setLoading(false), 200);
     }
   };
 
@@ -190,7 +190,28 @@ export default function SitesPage() {
     }
   };
 
-  if (loading) return <div className="flex justify-center py-32 bg-void"><Spinner size="lg" /></div>;
+  if (loading) return (
+    <div className="p-8 max-w-7xl mx-auto space-y-12 h-[calc(100vh-64px)] flex flex-col bg-transparent">
+      <div className="flex items-end justify-between border-b border-black/5 pb-8">
+        <div className="space-y-2">
+          <Skeleton className="w-32 h-4" />
+          <Skeleton className="w-64 h-10" />
+        </div>
+        <Skeleton className="w-40 h-12" />
+      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-12 flex-1 min-h-0">
+        <div className="bg-white rounded-3xl p-8 border border-black/5 space-y-6">
+           <Skeleton className="w-full h-12" />
+           <div className="space-y-4">
+             {[1,2,3,4,5].map(i => <Skeleton key={i} className="w-full h-20" />)}
+           </div>
+        </div>
+        <div className="bg-white rounded-3xl border border-black/5 overflow-hidden relative">
+           <Skeleton className="w-full h-full" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-12 h-[calc(100vh-64px)] flex flex-col bg-transparent">

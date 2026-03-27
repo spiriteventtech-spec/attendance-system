@@ -7,20 +7,21 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Menu } from 'lucide-react';
 import { useAuthStore } from './store/authStore';
 import Sidebar from './components/Sidebar';
-import { Spinner } from './components/ui';
-
-import LoginPage      from './pages/LoginPage';
-import DashboardPage  from './pages/DashboardPage';
-import LiveMapPage    from './pages/LiveMapPage';
-import AttendancePage from './pages/AttendancePage';
-import StaffPage      from './pages/StaffPage';
-import SitesPage      from './pages/SitesPage';
-import ReportsPage    from './pages/ReportsPage';
-import SettingsPage   from './pages/SettingsPage';
-import AnnouncementsPage from './pages/AnnouncementsPage';
-import PersonalDashboard from './pages/PersonalDashboard';
-import PersonalHistory   from './pages/PersonalHistory';
+import { Spinner, LoadingScreen } from './components/ui';
 import Logo from './assets/logo-premium.png';
+
+// Lazy load pages for performance (LCP Optimization)
+const LoginPage      = React.lazy(() => import('./pages/LoginPage'));
+const DashboardPage  = React.lazy(() => import('./pages/DashboardPage'));
+const LiveMapPage    = React.lazy(() => import('./pages/LiveMapPage'));
+const AttendancePage = React.lazy(() => import('./pages/AttendancePage'));
+const StaffPage      = React.lazy(() => import('./pages/StaffPage'));
+const SitesPage      = React.lazy(() => import('./pages/SitesPage'));
+const ReportsPage    = React.lazy(() => import('./pages/ReportsPage'));
+const SettingsPage   = React.lazy(() => import('./pages/SettingsPage'));
+const AnnouncementsPage = React.lazy(() => import('./pages/AnnouncementsPage'));
+const PersonalDashboard = React.lazy(() => import('./pages/PersonalDashboard'));
+const PersonalHistory   = React.lazy(() => import('./pages/PersonalHistory'));
 
 function Layout({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -93,27 +94,29 @@ export default function App() {
           error:   { iconTheme: { primary: '#FF3B30', secondary: '#FFFFFF' } },
         }}
       />
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        
-        <Route path="/" element={
-          <ProtectedRoute>
-            {user?.role === 'admin' ? <DashboardPage /> : <PersonalDashboard />}
-          </ProtectedRoute>
-        } />
+      <React.Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          
+          <Route path="/" element={
+            <ProtectedRoute>
+              {user?.role === 'admin' ? <DashboardPage /> : <PersonalDashboard />}
+            </ProtectedRoute>
+          } />
 
-        <Route path="/live-map"   element={<ProtectedRoute roles={['admin']}><LiveMapPage /></ProtectedRoute>} />
-        <Route path="/attendance" element={<ProtectedRoute roles={['admin']}><AttendancePage /></ProtectedRoute>} />
-        <Route path="/staff"      element={<ProtectedRoute roles={['admin']}><StaffPage /></ProtectedRoute>} />
-        <Route path="/sites"      element={<ProtectedRoute roles={['admin']}><SitesPage /></ProtectedRoute>} />
-        <Route path="/announcements" element={<ProtectedRoute roles={['admin']}><AnnouncementsPage /></ProtectedRoute>} />
-        <Route path="/reports"    element={<ProtectedRoute roles={['admin']}><ReportsPage /></ProtectedRoute>} />
-        
-        <Route path="/history"    element={<ProtectedRoute roles={['staff']}><PersonalHistory /></ProtectedRoute>} />
-        
-        <Route path="/settings"   element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-        <Route path="*"           element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="/live-map"   element={<ProtectedRoute roles={['admin']}><LiveMapPage /></ProtectedRoute>} />
+          <Route path="/attendance" element={<ProtectedRoute roles={['admin']}><AttendancePage /></ProtectedRoute>} />
+          <Route path="/staff"      element={<ProtectedRoute roles={['admin']}><StaffPage /></ProtectedRoute>} />
+          <Route path="/sites"      element={<ProtectedRoute roles={['admin']}><SitesPage /></ProtectedRoute>} />
+          <Route path="/announcements" element={<ProtectedRoute roles={['admin']}><AnnouncementsPage /></ProtectedRoute>} />
+          <Route path="/reports"    element={<ProtectedRoute roles={['admin']}><ReportsPage /></ProtectedRoute>} />
+          
+          <Route path="/history"    element={<ProtectedRoute roles={['staff']}><PersonalHistory /></ProtectedRoute>} />
+          
+          <Route path="/settings"   element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+          <Route path="*"           element={<Navigate to="/" replace />} />
+        </Routes>
+      </React.Suspense>
     </BrowserRouter>
   );
 }

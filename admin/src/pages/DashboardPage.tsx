@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Users, Clock, AlertTriangle, CheckCircle2, TrendingUp, MapPin } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { attendanceAPI, usersAPI, locationAPI } from '../services/api';
-import { StatCard, StatWidget, Spinner } from '../components/ui';
+import { StatCard, StatWidget, Spinner, StatsSkeleton, Skeleton } from '../components/ui';
 import { format, subDays } from 'date-fns';
 import clsx from 'clsx';
 
@@ -55,13 +55,31 @@ export default function DashboardPage() {
         overridesWeek:  logs.filter((l: any) => l.status === 'overridden').length,
       });
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 200); // Small delay for smooth transition
     }
   };
 
   if (loading) return (
-    <div className="flex-1 flex items-center justify-center">
-      <Spinner size="lg" />
+    <div className="space-y-10">
+      <div className="flex justify-between items-end">
+        <div className="space-y-2">
+          <Skeleton className="w-32 h-8" />
+          <Skeleton className="w-48 h-4" />
+        </div>
+      </div>
+      <StatsSkeleton />
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+        <div className="premium-card xl:col-span-3 h-[320px]">
+           <Skeleton className="w-48 h-6 mb-8" />
+           <Skeleton className="w-full h-full" />
+        </div>
+        <div className="premium-card xl:col-span-2 h-[320px]">
+           <Skeleton className="w-40 h-6 mb-8" />
+           <div className="space-y-4">
+             {[1,2,3].map(i => <Skeleton key={i} className="w-full h-16" />)}
+           </div>
+        </div>
+      </div>
     </div>
   );
 
