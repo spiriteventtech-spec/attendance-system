@@ -1,8 +1,8 @@
 // src/pages/AnnouncementsPage.tsx
 import React, { useEffect, useState } from 'react';
 import { announcementsAPI, usersAPI, sitesAPI } from '../services/api';
-import { Spinner, Badge, Modal } from '../components/ui';
-import { Megaphone, Send, Trash2, AlertTriangle, Info, Bell, Calendar, User } from 'lucide-react';
+import { Spinner, Modal } from '../components/ui';
+import { Megaphone, Send, Trash2, AlertTriangle, Info, Bell, Calendar, User, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
@@ -18,9 +18,9 @@ interface Announcement {
 }
 
 const priorityConfig = {
-  general:   { icon: <Info className="w-4 h-4" />,      color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  important: { icon: <Bell className="w-4 h-4" />,      color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  urgent:    { icon: <AlertTriangle className="w-4 h-4" />, color: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
+  general:   { icon: <Info className="w-4 h-4" />,          color: 'bg-[#007AFF]/8 text-[#007AFF] border-[#007AFF]/15',    dot: '#007AFF' },
+  important: { icon: <Bell className="w-4 h-4" />,          color: 'bg-[#FF9500]/8 text-[#FF9500] border-[#FF9500]/15',    dot: '#FF9500' },
+  urgent:    { icon: <AlertTriangle className="w-4 h-4" />, color: 'bg-[#FF3B30]/8 text-[#FF3B30] border-[#FF3B30]/15',    dot: '#FF3B30' },
 };
 
 export default function AnnouncementsPage() {
@@ -34,7 +34,7 @@ export default function AnnouncementsPage() {
     title: '',
     message: '',
     priority: 'general',
-    targetType: 'all', // 'all', 'site', 'user'
+    targetType: 'all',
     targetUserId: '',
     targetSiteId: ''
   });
@@ -56,9 +56,7 @@ export default function AnnouncementsPage() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,57 +92,68 @@ export default function AnnouncementsPage() {
   if (loading) return <div className="flex-1 flex items-center justify-center"><Spinner size="lg" /></div>;
 
   return (
-    <div className="p-6 h-full flex flex-col gap-6 max-w-5xl mx-auto w-full">
+    <div className="space-y-8 pb-12">
+
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#F1F5F9] flex items-center gap-3">
-            <Megaphone className="w-7 h-7 text-brand" />
-            Admin Broadcasts
-          </h1>
-          <p className="text-steel-400 text-sm mt-1">Send updates and notifications to all staff members.</p>
+          <h1 className="text-3xl font-bold text-[#1D1D1F] tracking-tight">Broadcasts</h1>
+          <p className="text-base text-[#86868B] font-medium mt-1">
+            Send updates and notifications to staff members
+          </p>
         </div>
-        <button 
+        <button
           onClick={() => setModal(true)}
-          className="btn-primary flex items-center gap-2 px-5 py-2.5"
+          className="btn-apple gap-2"
         >
-          <Send className="w-4 h-4" />
-          New Announcement
+          <Plus className="w-4 h-4" />
+          New Broadcast
         </button>
       </div>
 
+      {/* Announcement List */}
       <div className="space-y-4">
         {announcements.length === 0 ? (
-          <div className="card p-12 flex flex-col items-center text-center opacity-60">
-            <Megaphone className="w-12 h-12 text-steel-500 mb-4" />
-            <p className="text-steel-400">No announcements posted yet.</p>
+          <div className="premium-card flex flex-col items-center py-20 text-center">
+            <div className="w-16 h-16 bg-[#F5F5F7] rounded-full flex items-center justify-center mb-4">
+              <Megaphone className="w-8 h-8 text-[#86868B]" />
+            </div>
+            <h3 className="text-[#1D1D1F] font-semibold text-lg mb-1">No broadcasts yet</h3>
+            <p className="text-[#86868B] text-sm font-medium">Create your first announcement above.</p>
           </div>
-        ) : (
-          announcements.map(a => (
-            <div key={a.id} className="card p-5 group animate-in fade-in slide-in-from-bottom-2 duration-300">
+        ) : announcements.map(a => {
+          const cfg = priorityConfig[a.priority] || priorityConfig.general;
+          return (
+            <div key={a.id} className="premium-card group">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className={clsx("px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5", (priorityConfig[a.priority] || priorityConfig.general).color)}>
-                      {(priorityConfig[a.priority] || priorityConfig.general).icon}
+                  {/* Priority + Target badges */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className={clsx(
+                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border capitalize",
+                      cfg.color
+                    )}>
+                      {cfg.icon}
                       {a.priority}
                     </div>
                     {(a as any).target_site_id || (a as any).target_user_id ? (
-                      <div className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20 max-w-[200px] truncate">
-                        Target: {(a as any).target_site_id ? `Site (${(a as any).target_site_name})` : `User (${(a as any).target_first_name})`}
+                      <div className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-[#AF52DE]/8 text-[#AF52DE] border border-[#AF52DE]/15 max-w-[200px] truncate">
+                        {(a as any).target_site_id ? `Site: ${(a as any).target_site_name}` : `User: ${(a as any).target_first_name}`}
                       </div>
                     ) : (
-                      <div className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <div className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-[#34C759]/8 text-[#34C759] border border-[#34C759]/15">
                         All Staff
                       </div>
                     )}
-                    <h3 className="font-bold text-lg text-[#F1F5F9]">{a.title}</h3>
+                    <h3 className="font-bold text-[#1D1D1F] text-base">{a.title}</h3>
                   </div>
-                  
-                  <p className="text-steel-300 leading-relaxed whitespace-pre-wrap">
+
+                  <p className="text-[#1D1D1F] text-sm leading-relaxed whitespace-pre-wrap">
                     {a.message}
                   </p>
-                  
-                  <div className="flex items-center gap-6 text-[11px] text-steel-500 pt-2">
+
+                  {/* Meta */}
+                  <div className="flex items-center gap-6 text-[11px] text-[#86868B] font-medium">
                     <div className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5" />
                       <span>{a.first_name} {a.last_name}</span>
@@ -154,40 +163,45 @@ export default function AnnouncementsPage() {
                       <span>
                         {(() => {
                           try { return format(new Date(a.created_at), 'PPPp'); }
-                          catch(e) { return 'Invalid Date'; }
+                          catch (e) { return 'Invalid Date'; }
                         })()}
                       </span>
                     </div>
                   </div>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => handleDelete(a.id)}
-                  className="p-2 text-steel-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                  className="p-2 text-[#86868B] hover:text-[#FF3B30] hover:bg-[#FF3B30]/8 rounded-xl transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
+                  title="Delete announcement"
                 >
-                  <Trash2 className="w-4.5 h-4.5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
-          ))
-        )}
+          );
+        })}
       </div>
 
-      <Modal open={modal} onClose={() => setModal(false)} title="Create Broadcast Announcement">
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-steel-400 uppercase tracking-wider">Title</label>
-            <input 
+      {/* Create Modal */}
+      <Modal open={modal} onClose={() => setModal(false)} title="New Broadcast">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          
+          {/* Title */}
+          <div>
+            <label className="telemetry-label">Title</label>
+            <input
               required
-              className="w-full bg-[#0F172A] border-[#334155] rounded-xl px-4 py-3 text-[#F1F5F9] focus:ring-2 focus:ring-brand/50 outline-none transition-all"
+              className="input-apple"
               placeholder="E.g. Site Maintenance Update"
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-steel-400 uppercase tracking-wider">Target Audience</label>
+          {/* Target Audience */}
+          <div>
+            <label className="telemetry-label">Target Audience</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { id: 'all',  label: 'All Staff' },
@@ -199,10 +213,10 @@ export default function AnnouncementsPage() {
                   type="button"
                   onClick={() => setFormData({ ...formData, targetType: t.id as any })}
                   className={clsx(
-                    "py-2 rounded-lg border text-[10px] font-bold uppercase transition-all",
-                    formData.targetType === t.id 
-                      ? 'bg-brand/10 border-brand text-brand' 
-                      : 'bg-[#0F172A] border-[#334155] text-steel-500'
+                    "py-2.5 rounded-xl border text-[11px] font-bold uppercase transition-all",
+                    formData.targetType === t.id
+                      ? 'bg-[#007AFF]/8 border-[#007AFF]/30 text-[#007AFF]'
+                      : 'bg-black/[0.02] border-black/[0.05] text-[#86868B] hover:border-black/10'
                   )}
                 >
                   {t.label}
@@ -213,7 +227,7 @@ export default function AnnouncementsPage() {
             {formData.targetType === 'site' && (
               <select
                 required
-                className="w-full bg-[#0F172A] border-[#334155] rounded-xl px-4 py-3 text-sm text-[#F1F5F9] mt-2 outline-none"
+                className="input-apple mt-3"
                 value={formData.targetSiteId}
                 onChange={e => setFormData({ ...formData, targetSiteId: e.target.value })}
               >
@@ -225,7 +239,7 @@ export default function AnnouncementsPage() {
             {formData.targetType === 'user' && (
               <select
                 required
-                className="w-full bg-[#0F172A] border-[#334155] rounded-xl px-4 py-3 text-sm text-[#F1F5F9] mt-2 outline-none"
+                className="input-apple mt-3"
                 value={formData.targetUserId}
                 onChange={e => setFormData({ ...formData, targetUserId: e.target.value })}
               >
@@ -235,45 +249,59 @@ export default function AnnouncementsPage() {
             )}
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-steel-400 uppercase tracking-wider">Priority</label>
+          {/* Priority */}
+          <div>
+            <label className="telemetry-label">Priority</label>
             <div className="grid grid-cols-3 gap-3">
-              {(['general', 'important', 'urgent'] as const).map(p => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, priority: p })}
-                  className={clsx(
-                    "py-2 rounded-xl border text-xs font-bold uppercase transition-all flex items-center justify-center gap-2",
-                    formData.priority === p 
-                      ? 'bg-brand/10 border-brand text-brand ring-2 ring-brand/20' 
-                      : 'bg-[#0F172A] border-[#334155] text-steel-400 hover:border-steel-500'
-                  )}
-                >
-                  {priorityConfig[p].icon}
-                  {p}
-                </button>
-              ))}
+              {(['general', 'important', 'urgent'] as const).map(p => {
+                const cfg = priorityConfig[p];
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, priority: p })}
+                    className={clsx(
+                      "py-2.5 rounded-xl border text-[11px] font-bold uppercase transition-all flex items-center justify-center gap-2 capitalize",
+                      formData.priority === p
+                        ? clsx('border ring-2', cfg.color, 'ring-current/20')
+                        : 'bg-black/[0.02] border-black/[0.05] text-[#86868B] hover:border-black/10'
+                    )}
+                  >
+                    {cfg.icon}
+                    {p}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-steel-400 uppercase tracking-wider">Message</label>
-            <textarea 
+          {/* Message */}
+          <div>
+            <label className="telemetry-label">Message</label>
+            <textarea
               required
               rows={5}
-              className="w-full bg-[#0F172A] border-[#334155] rounded-xl px-4 py-3 text-[#F1F5F9] focus:ring-2 focus:ring-brand/50 outline-none transition-all resize-none"
+              className="input-apple resize-none"
               placeholder="Type your message here..."
               value={formData.message}
               onChange={e => setFormData({ ...formData, message: e.target.value })}
             />
           </div>
 
-          <div className="pt-2 flex gap-3">
-            <button type="button" onClick={() => setModal(false)} className="flex-1 px-4 py-3 rounded-xl bg-steel-800 text-steel-300 hover:bg-steel-700 font-bold text-sm transition-all">
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setModal(false)}
+              className="btn-apple-secondary flex-1"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={submitting} className="flex-2 px-8 py-3 rounded-xl bg-brand text-white hover:bg-brand-hover font-bold text-sm shadow-lg shadow-brand/20 transition-all flex items-center justify-center gap-2">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-apple flex-[2]"
+            >
               {submitting ? <Spinner size="sm" /> : <><Send className="w-4 h-4" /> Broadcast Now</>}
             </button>
           </div>

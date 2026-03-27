@@ -42,31 +42,32 @@
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { 
-    background: rgba(0, 0, 0, 0.05); 
+    background: rgba(0, 0, 0, 0.08); 
     border-radius: 10px;
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-white/70 backdrop-blur-3xl border border-white/40 rounded-[var(--radius-ios)]
+    @apply bg-white/80 backdrop-blur-2xl border border-black/5 rounded-[var(--radius-ios)]
            transition-all duration-300;
     box-shadow: var(--shadow-premium);
   }
 
   .premium-card {
-    @apply bg-white rounded-[var(--radius-ios)] p-6 border border-black/[0.02] 
+    @apply bg-white rounded-[var(--radius-ios)] p-6 border border-black/[0.04] 
            transition-all duration-300;
     box-shadow: var(--shadow-premium);
   }
   .premium-card:hover {
-    box-shadow: var(--shadow-google);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   }
 
   .btn-apple {
     @apply bg-[var(--brand-primary)] text-white px-6 py-3 rounded-full font-semibold text-sm
            transition-all duration-200 active:scale-95 disabled:opacity-50
-           flex items-center justify-center gap-2 shadow-sm hover:brightness-105;
+           flex items-center justify-center gap-2 hover:brightness-105;
+    box-shadow: 0 2px 8px rgba(0,122,255,0.2);
   }
 
   .btn-apple-secondary {
@@ -75,13 +76,13 @@
   }
 
   .input-apple {
-    @apply bg-black/[0.02] border border-transparent rounded-[12px] px-4 py-3 text-sm
+    @apply bg-black/[0.03] border border-transparent rounded-xl px-4 py-3 text-sm
            text-[#1D1D1F] placeholder-black/25 focus:outline-none focus:bg-white
            transition-all duration-200 w-full;
   }
   .input-apple:focus {
-    border-color: rgba(0, 122, 255, 0.1); /* --brand-primary at 10% */
-    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.05); /* ring-4 at 5% */
+    border-color: rgba(0, 122, 255, 0.2);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.06);
   }
 
   .telemetry-label {
@@ -93,16 +94,39 @@
   }
 }
 
-/* Leaflet Custom Theme Overlay */
+/* ─── Leaflet Map — Light Chrome ───────────────────────── */
 .leaflet-container {
-  background: var(--bg-void) !important;
+  background: #f5f5f7 !important;
+  font-family: 'Inter', sans-serif;
 }
 
+/* Use the natural CARTO light tile — no dark inversion */
 .leaflet-tile {
-  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+  filter: none;
 }
 
+/* Light zoom controls */
 .leaflet-bar a {
-  background-color: rgba(0,0,0,0.8) !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  background-color: #ffffff !important;
+  color: #1D1D1F !important;
+  border-color: rgba(0,0,0,0.08) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  font-size: 16px;
 }
+.leaflet-bar a:hover {
+  background-color: #F5F5F7 !important;
+  color: #007AFF !important;
+}
+
+/* Light attribution */
+.leaflet-control-attribution {
+  background: rgba(255,255,255,0.9) !important;
+  color: #86868B !important;
+  font-size: 10px;
+  border-radius: 8px 0 0 0;
+}
+
+/* Custom scrollbar for panels */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 4px; }

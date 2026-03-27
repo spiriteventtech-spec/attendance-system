@@ -4,40 +4,36 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#252634',
-        elevated: '#2D2E3D',
-        panel: 'rgba(45, 46, 61, 0.8)',
-        brand: {
-          DEFAULT: '#00F5FF', // Neon Cyan
-          purple: '#A855F7',
-          blue: '#3B82F6',
-          orange: '#FB923C',
-          rose: '#F43F5E',
-          green: '#39FF14',   // Apple Neon Green
-          red: '#FF3131',     // Hazard Red
-        },
-        steel: {
-          900: '#1A1B26',
-          800: '#252634',
-          700: '#2D2E3D',
-          400: '#94A3B8',
-          500: '#64748B',
-        }
+        // Apple System Colors
+        'sys-blue':   '#007AFF',
+        'sys-green':  '#34C759',
+        'sys-red':    '#FF3B30',
+        'sys-orange': '#FF9500',
+        'sys-purple': '#AF52DE',
+        'sys-indigo': '#5856D6',
+        'sys-teal':   '#30B0C7',
+        // Semantic UI
+        'apple-bg':       '#F5F5F7',
+        'apple-card':     '#FFFFFF',
+        'apple-label':    '#1D1D1F',
+        'apple-secondary':'#86868B',
+        'apple-divider':  'rgba(0,0,0,0.06)',
       },
       fontFamily: {
-        sans: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'monospace'],
       },
-      backgroundImage: {
-        'glass-gradient': 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)',
+      borderRadius: {
+        'ios':  '16px',
+        'ios2': '24px',
+        'ios3': '32px',
       },
       boxShadow: {
-        'soft-3d': '0 20px 50px rgba(0,0,0,0.3)',
-        'neon-cyan': '0 0 15px rgba(0, 245, 255, 0.3)',
-        'neon-green': '0 0 15px rgba(57, 255, 20, 0.3)',
-        'neon-red': '0 0 15px rgba(255, 49, 49, 0.3)',
-        'premium': 'var(--shadow-premium)',
-      }
+        'premium': '0 8px 32px rgba(0,0,0,0.06)',
+        'card':    '0 2px 12px rgba(0,0,0,0.06)',
+        'modal':   '0 24px 80px rgba(0,0,0,0.12)',
+        'blue':    '0 4px 14px rgba(0,122,255,0.25)',
+      },
     },
   },
   plugins: [],
