@@ -18,6 +18,7 @@ const reportRoutes     = require('./routes/reports');
 const announcementRoutes = require('./routes/announcements');
 const { pruneExpiredNonces } = require('./middleware/replayProtection');
 const { checkLateShifts, markAbsences } = require('./cron/shiftWatcher');
+const { initWeeklyReportCron } = require('./cron/weeklyReport');
 const { query } = require('./config/db');
 
 const app  = express();
@@ -127,4 +128,7 @@ app.listen(PORT, () => {
   
   // Absence Check every hour
   setInterval(markAbsences, 60 * 60 * 1000);
+
+  // Weekly Report Scheduler (Cron)
+  initWeeklyReportCron();
 });

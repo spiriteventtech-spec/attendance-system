@@ -107,4 +107,52 @@ const sendVelocityViolationAlert = async (adminEmails, workerName, speedKph, wor
   }
 };
 
-module.exports = { sendDeviceMismatchAlert, sendVelocityViolationAlert };
+/**
+ * Send the automated weekly report to an administrator.
+ */
+const sendWeeklyReportEmail = async (recipientEmail, pdfBuffer, excelBuffer, startDate, endDate) => {
+  const t = getTransporter();
+  if (!t) {
+    console.warn(`[EmailAlert] Weekly report for ${recipientEmail} — SMTP not configured`);
+    return;
+  }
+
+  const html = `
+    <div style="font-family: sans-serif; padding: 24px; color: #1D1D1F;">
+      <h2 style="color: #007AFF;">Weekly Attendance Summary</h2>
+      <p>Hello,</p>
+      <p>Please find the automated attendance and structural report for the period <strong>${startDate}</strong> to <strong>${endDate}</strong> attached to this email.</p>
+      <ul style="color: #888; font-size: 13px;">
+        <li><strong>PDF Report</strong>: Formatted for quick review and printing.</li>
+        <li><strong>Excel Report</strong>: Contains raw logs and detailed site/staff calculations.</li>
+      </ul>
+      <p style="margin-top: 24px; font-size: 12px; color: #8E8E93;">
+        This is an automated system report. You can manage your report settings in the Admin Dashboard.
+      </p>
+    </div>
+  `;
+
+  await t.sendMail({
+    from: `"EventsTrack Reports" <${process.env.SMTP_USER}>`,
+    to: recipientEmail,
+    subject: `Weekly Attendance Report: ${startDate} - ${endDate}`,
+    html,
+    attachments: [
+      {
+        filename: `attendance-report-${startDate}.pdf`,
+        content: pdfBuffer,
+      },
+      {
+        filename: `attendance-report-${startDate}.xlsx`,
+        content: excelBuffer,
+      }
+    ]
+  });
+  console.log(`[EmailAlert] Weekly report sent to ${recipientEmail}`);
+};
+
+module.exports = { 
+  sendDeviceMismatchAlert, 
+  sendVelocityViolationAlert,
+  sendWeeklyReportEmail
+};

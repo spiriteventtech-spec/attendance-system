@@ -125,6 +125,12 @@ export const securityAPI = {
     api.get('/security/status'),
   resetDeviceBinding: (userId: string) =>
     api.delete(`/security/users/${userId}/device`),
+  getReportSettings: () =>
+    api.get('/security/report-settings'),
+  setReportSettings: (data: { enabled: boolean; recipient: string; format: 'pdf' | 'xlsx' | 'both' }) =>
+    api.put('/security/report-settings', data),
+  triggerTestReport: () =>
+    api.post('/security/report-test'),
 };
 
 export const shiftsAPI = {

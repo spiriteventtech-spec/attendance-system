@@ -420,4 +420,93 @@ router.put('/session-policy', authenticate, requireAdmin, [
   }
 });
 
+// ── GET /api/security/report-settings ───────────────────────────────────────
+// Admin-only: Fetch current weekly report automation status & recipient
+router.get('/report-settings', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT key, value FROM system_settings WHERE key IN ('weekly_report_enabled', 'weekly_report_recipient', 'weekly_report_format')`
+    );
+    const settings = rows.reduce((acc, row) => ({ ...acc, [row.key]: row.value }), {});
+    res.json(settings);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── PUT /api/security/report-settings ───────────────────────────────────────
+// Admin-only: Update weekly report automation settings
+router.put('/report-settings', authenticate, requireAdmin, [
+  body('enabled').isBoolean(),
+  body('recipient').isEmail().withMessage('Invalid recipient email'),
+  body('format').isIn(['pdf', 'xlsx', 'both']).withMessage('Invalid format'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
+
+  const { enabled, recipient, format } = req.body;
+
+  try {
+    await withTransaction(async (client) => {
+      await client.query(
+        "INSERT INTO system_settings (key, value, updated_by) VALUES ('weekly_report_enabled', $1, $2) ON CONFLICT (key) DO UPDATE SET value = $1, updated_by = $2, updated_at = NOW()",
+        [String(enabled), req.user.id]
+      );
+      await client.query(
+        "INSERT INTO system_settings (key, value, updated_by) VALUES ('weekly_report_recipient', $1, $2) ON CONFLICT (key) DO UPDATE SET value = $1, updated_by = $2, updated_at = NOW()",
+        [recipient, req.user.id]
+      );
+      await client.query(
+        "INSERT INTO system_settings (key, value, updated_by) VALUES ('weekly_report_format', $1, $2) ON CONFLICT (key) DO UPDATE SET value = $1, updated_by = $2, updated_at = NOW()",
+        [format, req.user.id]
+      );
+    });
+    res.json({ message: 'Report settings updated' });
+  } catch (err) {
+    console.error('Report settings update error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── POST /api/security/report-test ──────────────────────────────────────────
+// Admin-only: Manually trigger a test weekly report email
+router.post('/report-test', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { rows: settings } = await query(
+      `SELECT key, value FROM system_settings WHERE key IN ('weekly_report_recipient', 'weekly_report_format')`
+    );
+    const config = settings.reduce((acc, row) => ({ ...acc, [row.key]: row.value }), {});
+    
+    if (!config.weekly_report_recipient) {
+      return res.status(400).json({ error: 'No recipient email configured in settings' });
+    }
+
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const { 
+      fetchReportData, 
+      aggregateReportData, 
+      generateExcelBuffer, 
+      generatePDFBuffer 
+    } = require('../services/reportService');
+    const { sendWeeklyReportEmail } = require('../utils/emailAlert');
+
+    const rows = await fetchReportData({ startDate, endDate });
+    const aggregated = aggregateReportData(rows, 'weekly');
+
+    const [pdfBuffer, excelBuffer] = await Promise.all([
+      generatePDFBuffer(rows, aggregated, 'weekly'),
+      generateExcelBuffer(rows, aggregated, 'weekly')
+    ]);
+
+    await sendWeeklyReportEmail(config.weekly_report_recipient, pdfBuffer, excelBuffer, startDate, endDate);
+
+    res.json({ message: `Test report sent to ${config.weekly_report_recipient}` });
+  } catch (err) {
+    console.error('Test report failed:', err);
+    res.status(500).json({ error: 'Failed to send test report' });
+  }
+});
+
 module.exports = router;

@@ -4,7 +4,7 @@
   "description": "Geofenced Attendance Tracking System - Backend API",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/utils/migrate.js && node src/utils/security-migrate.js && node src/utils/shifts-migrate.js && node src/utils/announcements-migrate.js && node src/index.js",
+    "start": "node src/utils/migrate.js && node src/utils/security-migrate.js && node src/utils/shifts-migrate.js && node src/utils/announcements-migrate.js && node src/utils/report-migrate.js && node src/index.js",
     "dev": "nodemon src/index.js",
     "migrate": "node src/utils/migrate.js"
   },
@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "node-cron": "^4.2.1",
     "nodemailer": "^8.0.4",
     "pdfkit": "^0.14.0",
     "pg": "^8.11.3",
