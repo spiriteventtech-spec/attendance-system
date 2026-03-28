@@ -61,8 +61,14 @@ export const SelfieCapture: React.FC<SelfieCaptureProps> = ({ onCapture, onCance
 
   useEffect(() => {
     startCamera();
-    return () => stopCamera();
-  }, [startCamera, stopCamera]);
+    return () => {
+      // Use a local copy or the latest stream to stop tracks on unmount
+      if (videoRef.current?.srcObject) {
+        const ms = videoRef.current.srcObject as MediaStream;
+        ms.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [startCamera]); // startCamera is stable via useCallback with no deps
 
   const handleCapture = () => {
     if (videoRef.current && canvasRef.current) {
