@@ -46,8 +46,11 @@ export default function PersonalDashboard() {
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkInForm, setCheckInForm] = useState({ siteId: '', note: '' });
+  
   const [showCheckOut, setShowCheckOut] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
   const [checkOutNote, setCheckOutNote] = useState('');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -108,6 +111,30 @@ export default function PersonalDashboard() {
       toast.error(err.response?.data?.error || 'GEOLOCATION_VALIDATION_FAILED');
     } finally {
       setCheckingIn(false);
+    }
+  };
+
+  const handleCheckOut = async () => {
+    setCheckingOut(true);
+    try {
+      const pos = await new Promise<GeolocationPosition>((res, rej) => 
+        navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true })
+      ).catch(() => ({ coords: { latitude: undefined, longitude: undefined } } as any));
+
+      await attendanceAPI.checkout({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        note: checkOutNote
+      });
+
+      toast.success('SHIFT COMPLETED');
+      setShowCheckOut(false);
+      setCheckOutNote('');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'CHECK-OUT_FAILED');
+    } finally {
+      setCheckingOut(false);
     }
   };
 
@@ -425,8 +452,12 @@ export default function PersonalDashboard() {
                value={checkOutNote}
                onChange={e => setCheckOutNote(e.target.value)}
             />
-            <button className="btn-apple w-full py-5 bg-[#FF3B30] text-white shadow-xl shadow-[#FF3B30]/20" onClick={() => setShowCheckOut(false)}>
-                Confirm Check-Out
+            <button 
+              disabled={checkingOut}
+              className="btn-apple w-full py-5 bg-[#FF3B30] text-white shadow-xl shadow-[#FF3B30]/20 flex items-center justify-center gap-2" 
+              onClick={handleCheckOut}
+            >
+                {checkingOut ? <Spinner size="sm" /> : 'Confirm Check-Out'}
             </button>
         </div>
       </Modal>
