@@ -202,3 +202,4 @@ export const FilterSelect = ({
 
 export * from './LoadingScreen';
 export * from './Skeleton';
+export * from './SelfieCapture';

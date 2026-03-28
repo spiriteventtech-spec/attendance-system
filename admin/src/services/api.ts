@@ -115,6 +115,8 @@ export const securityAPI = {
     api.post('/security/generate-qr', { siteId }),
   verifyQR: (token: string, latitude: number, longitude: number, note: string) =>
     api.post('/security/verify-qr', { token, latitude, longitude, note }),
+  checkinSelfie: (selfieBase64: string) => 
+    api.post('/security/checkin-selfie', { selfieBase64 }),
   getSessionPolicy: () =>
     api.get('/security/session-policy'),
   setSessionPolicy: (policy: 'block_new' | 'terminate_old') =>

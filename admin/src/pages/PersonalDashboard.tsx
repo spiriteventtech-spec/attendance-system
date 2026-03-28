@@ -16,8 +16,8 @@ import {
   Radar,
   User as UserIcon
 } from 'lucide-react';
-import { authAPI, attendanceAPI, sitesAPI, announcementsAPI } from '../services/api';
-import { StatCard, StatWidget, Spinner, Badge, Modal, EmptyState, Skeleton } from '../components/ui';
+import { authAPI, attendanceAPI, sitesAPI, announcementsAPI, securityAPI } from '../services/api';
+import { StatCard, StatWidget, Spinner, Badge, Modal, EmptyState, Skeleton, SelfieCapture } from '../components/ui';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
@@ -44,6 +44,7 @@ export default function PersonalDashboard() {
   const [sites, setSites] = useState<any[]>([]);
   
   const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showSelfie, setShowSelfie] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkInForm, setCheckInForm] = useState({ siteId: '', note: '' });
   
@@ -91,24 +92,50 @@ export default function PersonalDashboard() {
     }
   };
 
-  const handleCheckIn = async () => {
+  const triggerCheckIn = () => {
     if (!checkInForm.siteId) return toast.error('Please select a site');
+    setShowCheckIn(false);
+    setShowSelfie(true);
+  };
+
+  const handleSelfieCapture = async (base64Image: string) => {
+    setShowSelfie(false);
     setCheckingIn(true);
+    const loadingToast = toast.loading('Verifying identity...');
+    
     try {
+      // 1. Verify Identity
+      const { data: verifyData } = await securityAPI.checkinSelfie(base64Image);
+      
+      if (!verifyData.passed) {
+        toast.error('Identity verification failed. Please ensure your face is clearly visible.', { id: loadingToast });
+        setCheckingIn(false);
+        return;
+      }
+      
+      if (verifyData.skipped) {
+        toast.success(verifyData.message || 'Identity verified (Skipped)', { id: loadingToast });
+      } else {
+        toast.success(`Identity verified! (${verifyData.confidence}%)`, { id: loadingToast });
+      }
+
+      // 2. Fetch Geolocation and Check-In
+      toast.loading('Acquiring secure GPS lock...', { id: loadingToast });
       const pos = await new Promise<GeolocationPosition>((res, rej) => 
         navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 })
       );
+      
       await attendanceAPI.checkin({
         siteId: checkInForm.siteId,
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
         note: checkInForm.note
       });
-      toast.success('CHECK-IN INITIALIZED');
-      setShowCheckIn(false);
+      
+      toast.success('CHECK-IN INITIALIZED', { id: loadingToast });
       loadData();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'GEOLOCATION_VALIDATION_FAILED');
+      toast.error(err.response?.data?.error || 'CHECK-IN FAILED', { id: loadingToast });
     } finally {
       setCheckingIn(false);
     }
@@ -432,7 +459,7 @@ export default function PersonalDashboard() {
                 <button 
                   disabled={checkingIn}
                   className="btn-apple bg-[#007AFF] text-white flex-1 py-4 shadow-xl shadow-[#007AFF]/20"
-                  onClick={handleCheckIn}
+                  onClick={triggerCheckIn}
                 >
                     {checkingIn ? <Spinner size="sm" /> : 'Confirm Check-In'}
                 </button>
@@ -461,6 +488,23 @@ export default function PersonalDashboard() {
             </button>
         </div>
       </Modal>
+
+      {/* SELFIE CAPTURE OVERLAY */}
+      <AnimatePresence>
+        {showSelfie && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md"
+          >
+            <SelfieCapture 
+              onCapture={handleSelfieCapture} 
+              onCancel={() => setShowSelfie(false)} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
