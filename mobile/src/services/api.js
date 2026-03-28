@@ -13,7 +13,7 @@ import * as Device from 'expo-device';
 import * as Application from 'expo-application';
 import CryptoJS from 'crypto-js';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 
 // ── Device Fingerprint Generation ────────────────────────────────────────────
 // Generates a stable, unique device ID based on hardware characteristics.
