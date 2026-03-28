@@ -5,7 +5,7 @@ const {
   aggregateReportData, 
   generateExcelBuffer, 
   generatePDFBuffer 
-} = require('../utils/reportService'); // Adjusted path if needed, assuming it's in utils or services
+} = require('../services/reportService');
 
 module.exports = async function (fastify, opts) {
 
