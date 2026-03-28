@@ -91,27 +91,29 @@ router.post('/ping', authenticate, [
           ipAddress: req.ip,
         });
 
-        // Notify all admins via email
-        try {
-          const { rows: admins } = await query(`SELECT email FROM users WHERE role = 'admin'`);
-          const { rows: workerRows } = await query(`SELECT first_name, last_name FROM users WHERE id = $1`, [req.user.id]);
-          const workerName = workerRows[0] ? `${workerRows[0].first_name} ${workerRows[0].last_name}` : 'Unknown';
-          await sendVelocityViolationAlert(admins.map(a => a.email), workerName, speedKph, req.user.id);
-        } catch (alertErr) {
-          console.error('[Velocity] Alert failed:', alertErr.message);
-        }
+        // Notify all admins via email (asynchronous to avoid blocking DB connection)
+        const { rows: admins } = query(`SELECT email FROM users WHERE role = 'admin'`)
+          .then(async ({ rows: admins }) => {
+            const { rows: workerRows } = await query(`SELECT first_name, last_name FROM users WHERE id = $1`, [req.user.id]);
+            const workerName = workerRows[0] ? `${workerRows[0].first_name} ${workerRows[0].last_name}` : 'Unknown';
+            sendVelocityViolationAlert(admins.map(a => a.email), workerName, speedKph, req.user.id)
+              .catch(e => console.error('[Velocity Alert Email] Error:', e.message));
+          })
+          .catch(e => console.error('[Velocity Alert Logic] Error:', e.message));
 
-        // Notify the user themselves
-        try {
-          const { rows: userRows } = await query('SELECT expo_push_token FROM users WHERE id = $1', [req.user.id]);
-          const pushToken = userRows[0]?.expo_push_token;
-          if (pushToken) {
-            const { sendNotification: sn } = require('../utils/notificationService');
-            await sn(pushToken, '🚀 GPS Anomaly Detected',
-              'Impossible travel speed detected. Your location has been flagged for review.',
-              { type: 'VELOCITY_VIOLATION' });
-          }
-        } catch {}
+        // Notify the user themselves (asynchronous to avoid blocking DB connection)
+        query('SELECT expo_push_token FROM users WHERE id = $1', [req.user.id])
+          .then(({ rows: userRows }) => {
+            const pushToken = userRows[0]?.expo_push_token;
+            if (pushToken) {
+              const { sendNotification: sn } = require('../utils/notificationService');
+              sn(pushToken, '🚀 GPS Anomaly Detected',
+                'Impossible travel speed detected. Your location has been flagged for review.',
+                { type: 'VELOCITY_VIOLATION' })
+                .catch(e => console.error('[Velocity Push] Error:', e.message));
+            }
+          })
+          .catch(e => console.error('[Velocity user notification] Error:', e.message));
 
         // Still return ok — we log, alert, but don't hard-block (ping is recorded with flag)
         // Uncomment the line below to HARD-BLOCK instead:

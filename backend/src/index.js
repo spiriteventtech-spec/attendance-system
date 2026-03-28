@@ -5,6 +5,7 @@ const path         = require('path');
 const helmet       = require('helmet');
 const cors         = require('cors');
 const morgan       = require('morgan');
+const compression  = require('compression');
 const rateLimit    = require('express-rate-limit');
 
 const authRoutes       = require('./routes/auth');
@@ -25,7 +26,8 @@ const PORT = process.env.PORT || 3001;
 // Trust proxy for rate limiting (behind Nginx)
 app.set('trust proxy', 1);
 
-// ── Security & Parsing ───────────────────────────────────────
+// ── Performance & Security ───────────────────────────────────
+app.use(compression());
 app.use(helmet());
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*'];
 app.use(cors({
@@ -47,7 +49,12 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' })); // 10mb for base64 selfie images
 app.use(morgan('dev'));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Static files with 1-day browser cache
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  maxAge: '1d',
+  immutable: true
+}));
 
 // ── Rate Limiting ────────────────────────────────────────────
 const limiter = rateLimit({

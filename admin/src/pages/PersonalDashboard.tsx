@@ -96,7 +96,7 @@ export default function PersonalDashboard() {
     setCheckingIn(true);
     try {
       const pos = await new Promise<GeolocationPosition>((res, rej) => 
-        navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true })
+        navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 })
       );
       await attendanceAPI.checkin({
         siteId: checkInForm.siteId,
@@ -118,7 +118,7 @@ export default function PersonalDashboard() {
     setCheckingOut(true);
     try {
       const pos = await new Promise<GeolocationPosition>((res, rej) => 
-        navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true })
+        navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 })
       ).catch(() => ({ coords: { latitude: undefined, longitude: undefined } } as any));
 
       await attendanceAPI.checkout({

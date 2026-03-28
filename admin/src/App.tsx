@@ -7,7 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Menu } from 'lucide-react';
 import { useAuthStore } from './store/authStore';
 import Sidebar from './components/Sidebar';
-import { Spinner } from './components/ui';
+import { Spinner, DashboardSkeleton } from './components/ui';
 import Logo from './assets/logo-premium.png';
 
 const LoginPage      = React.lazy(() => import('./pages/LoginPage'));
@@ -54,8 +54,8 @@ function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 min-h-0 overflow-hidden">
-          <React.Suspense fallback={<div className="animate-pulse bg-black/[0.02] rounded-[32px] w-full h-[600px] m-10" />}>
+        <main className="flex-1 min-h-0 overflow-hidden px-8 py-8">
+          <React.Suspense fallback={<DashboardSkeleton />}>
             <Outlet />
           </React.Suspense>
         </main>

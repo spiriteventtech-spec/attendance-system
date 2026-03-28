@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Users, Clock, AlertTriangle, CheckCircle2, TrendingUp, MapPin } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { attendanceAPI, usersAPI, locationAPI } from '../services/api';
-import { StatCard, StatWidget, Spinner, StatsSkeleton, Skeleton } from '../components/ui';
+import { StatCard, StatWidget, Spinner, DashboardSkeleton, Skeleton } from '../components/ui';
 import { format, subDays } from 'date-fns';
 import clsx from 'clsx';
 
@@ -67,7 +67,7 @@ export default function DashboardPage() {
           <Skeleton className="w-48 h-4" />
         </div>
       </div>
-      <StatsSkeleton />
+      <DashboardSkeleton />
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         <div className="premium-card xl:col-span-3 h-[320px]">
            <Skeleton className="w-48 h-6 mb-8" />
