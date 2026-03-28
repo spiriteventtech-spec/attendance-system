@@ -84,7 +84,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="space-y-10">
+    <div className="p-6 lg:p-10 space-y-10 min-h-full overflow-y-auto">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-[#1D1D1F] tracking-tight">Overview</h1>

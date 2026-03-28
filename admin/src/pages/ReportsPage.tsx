@@ -132,7 +132,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 lg:p-10 space-y-6 h-screen overflow-y-auto">
       <div>
         <h1 className="text-2xl font-bold text-[#1D1D1F] tracking-tight">Reports & Export</h1>
         <p className="text-sm font-medium text-[#86868B] mt-1">Generate and download attendance reports</p>

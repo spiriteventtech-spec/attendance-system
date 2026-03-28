@@ -92,7 +92,7 @@ export default function AnnouncementsPage() {
   if (loading) return <div className="flex-1 flex items-center justify-center"><Spinner size="lg" /></div>;
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="p-6 lg:p-10 space-y-8 pb-12 h-screen overflow-y-auto min-h-0">
 
       {/* Header */}
       <div className="flex items-center justify-between">

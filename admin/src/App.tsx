@@ -54,8 +54,8 @@ function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-x-hidden p-6 lg:p-10">
-          <React.Suspense fallback={<div className="animate-pulse bg-black/[0.02] rounded-[32px] w-full h-[600px]" />}>
+        <main className="flex-1 min-h-0 overflow-hidden">
+          <React.Suspense fallback={<div className="animate-pulse bg-black/[0.02] rounded-[32px] w-full h-[600px] m-10" />}>
             <Outlet />
           </React.Suspense>
         </main>

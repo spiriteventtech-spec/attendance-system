@@ -214,7 +214,7 @@ export default function SitesPage() {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-12 h-[calc(100vh-64px)] flex flex-col bg-transparent">
+    <div className="p-6 lg:p-10 space-y-12 h-screen flex flex-col bg-transparent overflow-hidden">
       {/* HEADER SECTION */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}

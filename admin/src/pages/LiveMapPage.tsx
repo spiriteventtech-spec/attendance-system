@@ -193,7 +193,7 @@ export default function LiveMapPage() {
   // I will enhance the Leaflet styling to mimic the Silver theme perfectly.
 
   return (
-    <div className="relative h-full w-full bg-[var(--bg-main)] overflow-hidden flex font-sans">
+    <div className="relative h-full w-full bg-[var(--bg-main)] overflow-hidden flex font-sans animate-in fade-in duration-500">
       {/* Main Map Canvas */}
       <div className="absolute inset-0 z-0 map-silver">
         <MapContainer

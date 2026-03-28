@@ -281,7 +281,7 @@ export default function AttendancePage() {
   const totalPages = Math.ceil(total / 25);
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="p-6 lg:p-10 space-y-8 pb-12 h-screen overflow-y-auto min-h-0">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Attendance</h1>

@@ -50,7 +50,7 @@ export default function PersonalHistory() {
   const fmt = (dt?: string) => dt ? format(new Date(dt), 'HH:mm') : 'Active';
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-12">
+    <div className="p-6 lg:p-10 space-y-12 h-screen overflow-y-auto">
       <div className="flex justify-between items-end border-b border-black/5 pb-12">
         <div>
           <span className="text-[11px] font-bold text-[#007AFF] uppercase tracking-widest">Employee Records</span>

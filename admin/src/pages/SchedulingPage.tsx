@@ -84,7 +84,7 @@ export default function SchedulingPage() {
   const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
 
   return (
-    <div className="p-8 max-w-7xl mx-auto animate-in fade-in duration-700">
+    <div className="p-6 lg:p-10 space-y-8 pb-12 h-screen overflow-y-auto animate-in fade-in duration-700">
       <header className="flex justify-between items-end mb-10">
         <div>
           <h1 className="text-3xl font-black text-[#1D1D1F] tracking-tight">Mission Control // Roster</h1>

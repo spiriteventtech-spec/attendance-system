@@ -135,7 +135,7 @@ export default function PersonalDashboard() {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-12">
+    <div className="p-6 lg:p-10 space-y-12 h-screen overflow-y-auto">
       {/* PROFESSIONAL HEADER */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
