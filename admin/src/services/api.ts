@@ -6,9 +6,30 @@ const api = axios.create({
   timeout: 30000,
 });
 
+// ── Web Device Fingerprint ──────────────────────────────────
+// Ensures the web dashboard acts as a recognized "device"
+// for the Zero-Trust session conflict policies.
+const getOrCreateWebDeviceFingerprint = () => {
+  let fp = localStorage.getItem('device_fingerprint');
+  if (fp) return fp;
+  // Fallback simple UUID-like string for web
+  fp = 'web-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+  localStorage.setItem('device_fingerprint', fp);
+  return fp;
+};
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  
+  // Inject device fingerprint for strict Zero-Trust binding
+  try {
+    const deviceId = getOrCreateWebDeviceFingerprint();
+    config.headers['X-Device-Id'] = deviceId;
+  } catch (e) {
+    console.warn('Could not inject device fingerprint:', e);
+  }
+  
   return config;
 });
 

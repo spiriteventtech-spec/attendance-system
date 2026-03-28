@@ -1,5 +1,6 @@
 // src/pages/StaffPage.tsx
 import React, { useEffect, useState } from 'react';
+import { getImageUrl } from '../utils/image';
 import { usersAPI, authAPI, shiftsAPI, securityAPI } from '../services/api';
 import { Badge, Modal, Spinner, FilterInput, FilterSelect, ConfirmDialog, EmptyState, Skeleton } from '../components/ui';
 import { UserPlus, Search, Lock, Archive, Edit2, RotateCcw, Eye, Smartphone, Calendar, UserCheck, Camera } from 'lucide-react';
@@ -222,7 +223,7 @@ export default function StaffPage() {
                       <div className="flex items-center gap-4">
                         <div className="relative">
                           {u.avatar_url ? (
-                            <img src={`${(import.meta.env.VITE_API_BASE_URL || '').replace('/api', '')}${u.avatar_url}`} className="w-11 h-11 rounded-2xl object-cover ring-2 ring-white shadow-md" alt="" />
+                            <img src={getImageUrl(u.avatar_url)} className="w-11 h-11 rounded-2xl object-cover ring-2 ring-white shadow-md" alt="" />
                           ) : (
                             <div className="w-11 h-11 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center text-[#007AFF] text-sm font-black flex-shrink-0">
                               {u.first_name?.[0]}{u.last_name?.[0]}

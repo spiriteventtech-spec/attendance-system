@@ -29,19 +29,35 @@ const authenticate = async (req, res, next) => {
     if (rows[0].role === 'staff') {
       const deviceId = req.headers['x-device-id'];
       // Only enforce if device has been registered (skip on fresh registration)
-      if (rows[0].device_fingerprint && deviceId && rows[0].device_fingerprint !== deviceId) {
-        await logSecurityEvent({
-          userId: rows[0].id,
-          eventType: 'device_mismatch',
-          severity: 'critical',
-          detail: { path: req.path, method: req.method },
-          ipAddress: req.ip,
-        });
-        return res.status(403).json({
-          error: 'DEVICE_MISMATCH',
-          code: 'UNAUTHORIZED_DEVICE',
-          message: 'Access denied. This device is not registered to your account.',
-        });
+      if (rows[0].device_fingerprint) {
+        if (!deviceId) {
+          await logSecurityEvent({
+            userId: rows[0].id,
+            eventType: 'missing_device_id',
+            severity: 'high',
+            detail: { path: req.path, method: req.method, reason: 'bound_account_missing_header' },
+            ipAddress: req.ip,
+          });
+          return res.status(403).json({
+            error: 'DEVICE_ID_REQUIRED',
+            code: 'MISSING_DEVICE_HEADER',
+            message: 'Your account is bound to a device. Access is not permitted without a recognized device footprint.',
+          });
+        }
+        if (rows[0].device_fingerprint !== deviceId) {
+          await logSecurityEvent({
+            userId: rows[0].id,
+            eventType: 'device_mismatch',
+            severity: 'critical',
+            detail: { path: req.path, method: req.method },
+            ipAddress: req.ip,
+          });
+          return res.status(403).json({
+            error: 'DEVICE_MISMATCH',
+            code: 'UNAUTHORIZED_DEVICE',
+            message: 'Access denied. This device is not registered to your account.',
+          });
+        }
       }
       req.deviceId = deviceId;
     }

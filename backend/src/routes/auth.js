@@ -35,38 +35,55 @@ router.post('/login', [
     const user = rows[0];
 
     // ── Zero-Trust Session Conflict Policy ───────────────────────────
-    if (user.role === 'staff' && user.device_fingerprint && deviceId && user.device_fingerprint !== deviceId) {
-      // Fetch policy from settings
-      const { rows: policyRows } = await query(
-        "SELECT value FROM system_settings WHERE key = 'session_conflict_policy'"
-      );
-      const policy = policyRows[0]?.value || 'block_new';
-
-      if (policy === 'block_new') {
+    if (user.role === 'staff' && user.device_fingerprint) {
+      if (!deviceId) {
         await logSecurityEvent({
           userId: user.id,
           eventType: 'session_conflict',
           severity: 'high',
-          detail: { attemptedDeviceId: deviceId.substring(0, 16) + '...', policy: 'block_new' },
+          detail: { reason: 'web_login_blocked', storedDevice: user.device_fingerprint.substring(0, 16) + '...' },
           ipAddress: req.ip,
         });
         return res.status(403).json({
-          error: 'SESSION_CONFLICT',
-          code: 'DEVICE_ALREADY_BOUND',
-          message: 'Account bound to another device. Security policy blocks concurrent access.',
+          error: 'DEVICE_ID_REQUIRED',
+          code: 'MISSING_DEVICE_HEADER',
+          message: 'Account already bound to a device. New login attempt missing device identifier.',
         });
-      } else if (policy === 'terminate_old') {
-        // Invalidate old session by updating fingerprint to new one immediately
-        await query('UPDATE users SET device_fingerprint = $1, updated_at = NOW() WHERE id = $2', [deviceId, user.id]);
-        await logSecurityEvent({
-          userId: user.id,
-          eventType: 'session_terminated',
-          severity: 'medium',
-          detail: { newDeviceId: deviceId.substring(0, 16) + '...', oldDeviceId: user.device_fingerprint.substring(0, 16) + '...' },
-          ipAddress: req.ip,
-        });
-        // Update local object so login proceeds with new context
-        user.device_fingerprint = deviceId;
+      }
+
+      if (user.device_fingerprint !== deviceId) {
+        // Fetch policy from settings
+        const { rows: policyRows } = await query(
+          "SELECT value FROM system_settings WHERE key = 'session_conflict_policy'"
+        );
+        const policy = policyRows[0]?.value || 'block_new';
+
+        if (policy === 'block_new') {
+          await logSecurityEvent({
+            userId: user.id,
+            eventType: 'session_conflict',
+            severity: 'high',
+            detail: { attemptedDeviceId: deviceId.substring(0, 16) + '...', policy: 'block_new' },
+            ipAddress: req.ip,
+          });
+          return res.status(403).json({
+            error: 'SESSION_CONFLICT',
+            code: 'DEVICE_ALREADY_BOUND',
+            message: 'Account bound to another device. Security policy blocks concurrent access.',
+          });
+        } else if (policy === 'terminate_old') {
+          // Invalidate old session by updating fingerprint to new one immediately
+          await query('UPDATE users SET device_fingerprint = $1, updated_at = NOW() WHERE id = $2', [deviceId, user.id]);
+          await logSecurityEvent({
+            userId: user.id,
+            eventType: 'session_terminated',
+            severity: 'medium',
+            detail: { newDeviceId: deviceId.substring(0, 16) + '...', oldDeviceId: user.device_fingerprint.substring(0, 16) + '...' },
+            ipAddress: req.ip,
+          });
+          // Update local object so login proceeds with new context
+          user.device_fingerprint = deviceId;
+        }
       }
     }
 

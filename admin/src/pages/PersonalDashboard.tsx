@@ -21,6 +21,7 @@ import { authAPI, attendanceAPI, sitesAPI, announcementsAPI, securityAPI } from 
 import { StatCard, StatWidget, Spinner, Badge, Modal, EmptyState, Skeleton, SelfieCapture } from '../components/ui';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
+import { getImageUrl } from '../utils/image';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 
@@ -205,7 +206,7 @@ export default function PersonalDashboard() {
                  className="w-24 h-24 rounded-full border-2 border-white p-1 shadow-premium bg-white overflow-hidden relative"
                >
                  {user?.avatarUrl ? (
-                   <img src={`${(import.meta.env.VITE_API_BASE_URL || '').replace('/api', '')}${user.avatarUrl}`} className="w-full h-full rounded-full object-cover" />
+                   <img src={getImageUrl(user.avatarUrl)} className="w-full h-full rounded-full object-cover" />
                  ) : (
                     <div className="w-full h-full rounded-full bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center text-white text-3xl font-bold italic">
                         {user?.firstName?.[0]}

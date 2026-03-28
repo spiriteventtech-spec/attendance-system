@@ -19,6 +19,7 @@ import {
   Clock,
   User as UserIcon
 } from 'lucide-react';
+import { getImageUrl } from '../utils/image';
 import { format, formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -100,8 +101,7 @@ const StaffOverlays = ({ staff, onSelect }: { staff: any[]; onSelect: (u: any) =
 // ── Staff Avatar with Material Ripple ───────────────────────
 const StaffMarker = ({ u, onClick }: { u: any; onClick: () => void }) => {
   const statusColor = u.has_open_breach || !u.is_inside ? 'var(--brand-danger)' : 'var(--brand-success)';
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace('/api', '');
-  const avatarUrl = u.avatar_url ? (u.avatar_url.startsWith('http') ? u.avatar_url : `${baseUrl}${u.avatar_url}`) : null;
+  const avatarUrl = getImageUrl(u.avatar_url);
 
   return (
     <div 
@@ -358,7 +358,7 @@ export default function LiveMapPage() {
                 <div className="w-24 h-24 rounded-full bg-[#007AFF]/10 p-1 mb-4 flex items-center justify-center shadow-inner">
                   <div className="w-full h-full rounded-full overflow-hidden bg-white shadow-sm flex items-center justify-center text-[#007AFF] font-bold text-3xl">
                     {selected.avatar_url ? (
-                      <img src={`${(import.meta.env.VITE_API_BASE_URL || '').replace('/api', '')}${selected.avatar_url}`} className="w-full h-full object-cover" />
+                      <img src={getImageUrl(selected.avatar_url)} className="w-full h-full object-cover" />
                     ) : (
                       selected.first_name[0]
                     )}
