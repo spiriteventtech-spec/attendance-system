@@ -421,14 +421,24 @@ export default function LiveMapPage() {
                   <button 
                     disabled={sendingMsg}
                     className="btn-apple bg-[#007AFF] text-white w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold shadow-blue hover:shadow-[0_8px_24px_rgba(0,122,255,0.3)]"
-                    onClick={() => {
+                    onClick={async () => {
                       if (!messageText.trim()) return;
                       setSendingMsg(true);
-                      setTimeout(() => {
-                        toast.success('Message sent successfully');
-                        setSendingMsg(false);
+                      try {
+                        await announcementsAPI.create({
+                          title: 'Direct Message from Command',
+                          message: messageText.trim(),
+                          priority: 'important',
+                          targetUserId: selected.user_id,
+                          targetSiteId: null,
+                        });
+                        toast.success('Message sent to ' + selected.first_name);
                         setMessageText('');
-                      }, 1000);
+                      } catch (e) {
+                        toast.error('Failed to send message');
+                      } finally {
+                        setSendingMsg(false);
+                      }
                     }}
                   >
                     <Send className="w-4 h-4" /> Send Message

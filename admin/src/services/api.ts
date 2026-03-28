@@ -25,7 +25,7 @@ api.interceptors.request.use((config) => {
   // Inject device fingerprint for strict Zero-Trust binding
   try {
     const deviceId = getOrCreateWebDeviceFingerprint();
-    config.headers['X-Device-Id'] = deviceId;
+    config.headers['X-Device-ID'] = deviceId;
   } catch (e) {
     console.warn('Could not inject device fingerprint:', e);
   }
