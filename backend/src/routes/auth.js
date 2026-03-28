@@ -27,7 +27,7 @@ router.post('/login', [
 
   try {
     const { rows } = await query(
-      'SELECT id, email, password_hash, role, status, first_name, last_name, device_fingerprint FROM users WHERE email = $1',
+      'SELECT id, email, password_hash, role, status, first_name, last_name, device_fingerprint, avatar_url FROM users WHERE email = $1',
       [email]
     );
     if (!rows.length) return res.status(401).json({ error: 'Invalid credentials' });
@@ -35,7 +35,7 @@ router.post('/login', [
     const user = rows[0];
 
     // ── Zero-Trust Session Conflict Policy ───────────────────────────
-    if (user.role === 'staff' && user.device_fingerprint) {
+    if (user.device_fingerprint) {
       if (!deviceId) {
         await logSecurityEvent({
           userId: user.id,
@@ -109,6 +109,7 @@ router.post('/login', [
         role: user.role,
         firstName: user.first_name,
         lastName: user.last_name,
+        avatar_url: user.avatar_url,
       }
     });
 
@@ -134,7 +135,7 @@ router.post('/login', [
 router.get('/me', authenticate, async (req, res) => {
   try {
     const { rows } = await query(
-      'SELECT id, email, role, first_name, last_name, status, device_fingerprint FROM users WHERE id = $1',
+      'SELECT id, email, role, first_name, last_name, status, device_fingerprint, avatar_url FROM users WHERE id = $1',
       [req.user.sub]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
@@ -147,7 +148,8 @@ router.get('/me', authenticate, async (req, res) => {
       firstName: user.first_name,
       lastName: user.last_name,
       status: user.status,
-      deviceFingerprint: user.device_fingerprint
+      deviceFingerprint: user.device_fingerprint,
+      avatar_url: user.avatar_url,
     });
   } catch (err) {
     console.error('Profile fetch error:', err);

@@ -25,8 +25,8 @@ const authenticate = async (req, res, next) => {
 
     req.user = rows[0];
 
-    // ── Device Binding Check (staff only) ──────────────────────────────────
-    if (rows[0].role === 'staff') {
+    // ── Global Device Binding Check ──────────────────────────────────
+    if (true) {
       const deviceId = req.headers['x-device-id'];
       // Only enforce if device has been registered (skip on fresh registration)
       if (rows[0].device_fingerprint) {
