@@ -40,8 +40,8 @@ export const authAPI = {
     api.put('/admin/users/me/profile', data),
   uploadAvatar: (file: File, targetUserId?: string) => {
     const formData = new FormData();
-    formData.append('avatar', file);
     if (targetUserId) formData.append('targetUserId', targetUserId);
+    formData.append('avatar', file);
     return api.post('/admin/users/upload-avatar', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });

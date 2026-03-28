@@ -56,6 +56,7 @@ export default function PersonalDashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    refresh();
     loadData();
     sitesAPI.listPublic().then(res => setSites(res.data));
   }, []);
@@ -232,8 +233,17 @@ export default function PersonalDashboard() {
                 </h1>
                 <div className="flex gap-4 mt-3">
                     <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#34C759]" />
-                        <span className="text-[11px] font-bold text-[#34C759] uppercase tracking-widest">Identity Verified</span>
+                        {user?.avatarUrl ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#34C759]" />
+                            <span className="text-[11px] font-bold text-[#34C759] uppercase tracking-widest">Identity Verified</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="w-3.5 h-3.5 text-[#FF9500]" />
+                            <span className="text-[11px] font-bold text-[#FF9500] uppercase tracking-widest">Pending Enrollment</span>
+                          </>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 text-[#86868B]">
                         <Clock className="w-3.5 h-3.5" />

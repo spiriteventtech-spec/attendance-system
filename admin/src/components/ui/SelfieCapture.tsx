@@ -24,23 +24,42 @@ export const SelfieCapture: React.FC<SelfieCaptureProps> = ({ onCapture, onCance
       // Delay slightly to ensure UI is ready (helps on some mobile browsers)
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } 
-      });
+      // Relaxed constraints for maximum device compatibility
+      const constraints = { 
+        video: { 
+          facingMode: 'user',
+          width: { min: 640, ideal: 1280 },
+          height: { min: 480, ideal: 720 }
+        } 
+      };
+
+      let mediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (e) {
+        console.warn('Strict constraints failed, falling back to basic video', e);
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       
       setStream(mediaStream);
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         // Explicitly call play to handle browsers with stricter auto-play policies
-        try {
-          await videoRef.current.play();
-        } catch (e) {
-          console.warn('Auto-play failed, waiting for user interaction or metadata', e);
-        }
+        // and listen for metadata as some browsers need it before play()
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(e => {
+            console.error('Final play attempt failed', e);
+            setError('Camera stream could not start. Please refresh.');
+          });
+        };
       }
     } catch (err: any) {
-      setError(err.message || 'Could not access camera. Please check permissions.');
+      console.error('Camera access error:', err);
+      const isPermissionError = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError';
+      setError(isPermissionError 
+        ? 'Camera permission denied. Please enable access in your settings.' 
+        : 'Could not access camera. Please ensure no other app is using it.');
       setIsStarting(false);
     }
   }, []);
