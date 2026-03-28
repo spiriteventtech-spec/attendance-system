@@ -292,7 +292,6 @@ export default function CheckInScreen() {
     setSelfieStep(SELFIE_STEP.CAMERA);
   };
 
-  // Step 3: Take photo and verify
   const captureSelfie = async () => {
     if (!cameraRef.current) return;
     setSelfieStep(SELFIE_STEP.VERIFYING);
@@ -325,9 +324,23 @@ export default function CheckInScreen() {
       }, 800);
     } catch (err) {
       console.error('Selfie capture error:', err);
-      setSelfieStep(SELFIE_STEP.IDLE);
-      // On error, allow check-in to proceed
-      setNoteModal({ visible: true, type: pendingAction || 'checkin' });
+      // If the server explicitly rejected the selfie (400/403), block check-in
+      const serverMessage = err.response?.data?.message || err.response?.data?.error;
+      if (err.response?.status === 400 || err.response?.status === 403) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setSelfieStep(SELFIE_STEP.IDLE);
+        slideValue.value = withTiming(0);
+        Alert.alert(
+          '🚫 IDENTITY_SCAN_FAILED',
+          serverMessage || 'No valid human face detected. Please try again in good lighting.',
+          [{ text: 'RETRY', style: 'destructive' }]
+        );
+      } else {
+        // Network/device error — skip selfie but log it
+        console.warn('[CheckIn] Selfie error (non-server), allowing check-in:', err.message);
+        setSelfieStep(SELFIE_STEP.IDLE);
+        setNoteModal({ visible: true, type: pendingAction || 'checkin' });
+      }
     }
   };
 
@@ -354,7 +367,24 @@ export default function CheckInScreen() {
       setPendingAction(null);
       await refreshAll();
     } catch (err) {
-      Alert.alert('COMM_FAIL', err.response?.data?.error || 'Failed to sync with command center.');
+      const errorCode = err.response?.data?.error;
+      const errorMsg  = err.response?.data?.message;
+
+      // ── Device binding violation on check-out ────────────────────────────────
+      if (errorCode === 'DEVICE_MISMATCH') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setNoteModal({ visible: false, type: null });
+        setNoteText('');
+        slideValue.value = withTiming(0);
+        Alert.alert(
+          '🔒 CHECKOUT_BLOCKED',
+          'You must check out from the same device you used to check in.\n\nThis incident has been logged.',
+          [{ text: 'UNDERSTOOD', style: 'destructive' }]
+        );
+        return;
+      }
+
+      Alert.alert('COMM_FAIL', errorMsg || err.response?.data?.error || 'Failed to sync with command center.');
     } finally {
       setSubmitting(false);
       slideValue.value = withTiming(0);
