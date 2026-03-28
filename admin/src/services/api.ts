@@ -38,9 +38,10 @@ export const authAPI = {
     api.post('/change-password', { currentPassword, newPassword }),
   updateProfile: (data: { firstName?: string; lastName?: string; phone?: string; avatarUrl?: string }) =>
     api.put('/admin/users/me/profile', data),
-  uploadAvatar: (file: File) => {
+  uploadAvatar: (file: File, targetUserId?: string) => {
     const formData = new FormData();
     formData.append('avatar', file);
+    if (targetUserId) formData.append('targetUserId', targetUserId);
     return api.post('/admin/users/upload-avatar', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });

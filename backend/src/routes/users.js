@@ -212,13 +212,34 @@ router.put('/me/profile', authenticate, [
 });
 
 // ── POST /api/admin/users/upload-avatar ─────────────────────
+// Admin can upload for any user by providing targetUserId
+// Users can only upload for themselves
 router.post('/upload-avatar', authenticate, upload.single('avatar'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const isAdmin = req.user.role === 'admin';
+  const targetUserId = (isAdmin && (req.body.targetUserId || req.query.targetUserId)) 
+                    ? (req.body.targetUserId || req.query.targetUserId) 
+                    : req.user.id;
+
   const avatarUrl = `/uploads/profiles/${req.file.filename}`;
+
   try {
-    await query('UPDATE users SET avatar_url = $1, updated_at = NOW() WHERE id = $2', [avatarUrl, req.user.id]);
-    res.json({ message: 'Avatar uploaded', avatarUrl });
+    const { rowCount } = await query(
+      'UPDATE users SET avatar_url = $1, updated_at = NOW() WHERE id = $2', 
+      [avatarUrl, targetUserId]
+    );
+
+    if (!rowCount) return res.status(404).json({ error: 'User not found' });
+
+    console.log(`[Avatar] Uploaded for user ${targetUserId} by ${req.user.id}`);
+    res.json({ 
+      message: targetUserId === req.user.id ? 'Your avatar uploaded' : 'Staff reference photo enrolled', 
+      avatarUrl,
+      userId: targetUserId
+    });
   } catch (err) {
+    console.error('Avatar upload DB error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

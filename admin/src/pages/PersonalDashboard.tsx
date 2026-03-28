@@ -14,7 +14,8 @@ import {
   Navigation,
   Activity,
   Radar,
-  User as UserIcon
+  User as UserIcon,
+  Shield
 } from 'lucide-react';
 import { authAPI, attendanceAPI, sitesAPI, announcementsAPI, securityAPI } from '../services/api';
 import { StatCard, StatWidget, Spinner, Badge, Modal, EmptyState, Skeleton, SelfieCapture } from '../components/ui';
@@ -260,6 +261,26 @@ export default function PersonalDashboard() {
             )}
         </div>
       </motion.div>
+
+      {/* AI Enrollment Security Alert */}
+      {!user?.avatarUrl && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="p-6 rounded-[32px] bg-[#FF9500]/10 border border-[#FF9500]/20 flex items-start gap-6 shadow-premium"
+        >
+           <div className="w-12 h-12 rounded-2xl bg-[#FF9500] flex items-center justify-center text-white shadow-lg shadow-[#FF9500]/30 flex-shrink-0">
+              <Shield size={22} className="animate-pulse" />
+           </div>
+           <div className="space-y-1.5 flex-1">
+              <p className="text-sm font-black text-[#1D1D1F] uppercase tracking-[0.1em]">Identity Intel: Enrollment Required</p>
+              <p className="text-xs font-semibold text-[#86868B] leading-relaxed max-w-2xl">
+                Zero-Trust security is currently <span className="text-[#FF9500] font-black">BYPASSING verification</span> for your account because no master photo is on file. Please visit a supervisor to enroll your identity for mandatory security compliance.
+              </p>
+           </div>
+        </motion.div>
+      )}
+
 
       {/* METRICS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
