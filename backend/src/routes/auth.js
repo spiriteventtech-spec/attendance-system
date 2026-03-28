@@ -1,5 +1,4 @@
 // src/routes/auth.js
-const { body, validationResult } = require('fastify-plugin');
 const bcrypt = require('bcrypt');
 const { query } = require('../config/db');
 const redis = require('../config/redis');

@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS shifts (
     EXCLUDE USING gist (user_id WITH =, tstzrange(start_time, end_time) WITH &&)
 );
 
+-- Ensure late_notified_at exists if table was created previously without it
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS late_notified_at TIMESTAMPTZ;
+
 CREATE INDEX IF NOT EXISTS idx_shifts_user_time ON shifts(user_id, start_time);
 CREATE INDEX IF NOT EXISTS idx_shifts_site      ON shifts(site_id);
 CREATE INDEX IF NOT EXISTS idx_shifts_status    ON shifts(status);
