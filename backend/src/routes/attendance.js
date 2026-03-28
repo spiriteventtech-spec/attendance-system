@@ -78,7 +78,6 @@ module.exports = async function (fastify, opts) {
     }
   });
 
-  // ── GET /api/attendance/active ───────────────────────────────
   fastify.get('/active', { preHandler: [authenticate] }, async (request, reply) => {
     // Attempt Redis fetch
     const sessionStr = await redis.get(`active_session:${request.user.id}`);
@@ -92,5 +91,83 @@ module.exports = async function (fastify, opts) {
     // Recovery: hydrate redis
     await redis.set(`active_session:${request.user.id}`, JSON.stringify(rows[0]), 'EX', 43200);
     reply.send(rows[0]);
+  });
+
+  // ── GET /api/attendance/logs (Admin) ─────────────────────────
+  fastify.get('/logs', { preHandler: [authenticate, requireAdmin] }, async (request, reply) => {
+    const { userId, siteId, status, startDate, endDate, limit = 50 } = request.query;
+    const conditions = [];
+    const params = [];
+    let p = 1;
+
+    if (userId) { conditions.push(`al.user_id = $${p++}`); params.push(userId); }
+    if (siteId) { conditions.push(`al.site_id = $${p++}`); params.push(siteId); }
+    if (status) { conditions.push(`al.status = $${p++}`); params.push(status); }
+    if (startDate) { conditions.push(`DATE(al.check_in_time) >= $${p++}`); params.push(startDate); }
+    if (endDate) { conditions.push(`DATE(al.check_in_time) <= $${p++}`); params.push(endDate); }
+
+    const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+
+    try {
+      const { rows } = await query(`
+        SELECT al.*, u.first_name, u.last_name, ps.name as site_name
+        FROM attendance_logs al
+        JOIN users u ON u.id = al.user_id
+        JOIN projects_sites ps ON ps.id = al.site_id
+        ${where}
+        ORDER BY al.check_in_time DESC
+        LIMIT $${p}
+      `, [...params, limit]);
+      reply.send({ logs: rows });
+    } catch (err) {
+      console.error(err);
+      reply.status(500).send({ error: 'Failed to fetch logs' });
+    }
+  });
+
+  // ── GET /api/attendance/history (Staff) ──────────────────────
+  fastify.get('/history', { preHandler: [authenticate] }, async (request, reply) => {
+    const { limit = 10 } = request.query;
+    try {
+      const { rows } = await query(`
+        SELECT al.*, ps.name as site_name
+        FROM attendance_logs al
+        JOIN projects_sites ps ON ps.id = al.site_id
+        WHERE al.user_id = $1
+        ORDER BY al.check_in_time DESC
+        LIMIT $2
+      `, [request.user.id, limit]);
+      reply.send(rows);
+    } catch (err) {
+      reply.status(500).send({ error: 'Failed to fetch history' });
+    }
+  });
+
+  // ── POST /api/attendance/override (Admin) ────────────────────
+  fastify.post('/override', { preHandler: [authenticate, requireAdmin] }, async (request, reply) => {
+    const { logId, totalHours, note } = request.body;
+    try {
+      await query(`
+        UPDATE attendance_logs
+        SET total_hours_worked = $1, status = 'overridden', 
+            check_out_note = CONCAT(check_out_note, ' | Admin Override: ', $2::text)
+        WHERE id = $3
+      `, [totalHours, note, logId]);
+      reply.send({ message: 'Log overridden successfully' });
+    } catch (err) {
+      reply.status(500).send({ error: 'Failed to override log' });
+    }
+  });
+
+  // ── GET /api/attendance/breaches/:logId (Admin) ──────────────
+  fastify.get('/breaches/:logId', { preHandler: [authenticate, requireAdmin] }, async (request, reply) => {
+    try {
+      const { rows } = await query(`
+        SELECT * FROM breach_logs WHERE attendance_log_id = $1 ORDER BY exit_time DESC
+      `, [request.params.logId]);
+      reply.send(rows);
+    } catch (err) {
+      reply.status(500).send({ error: 'Failed to fetch breaches' });
+    }
   });
 };
