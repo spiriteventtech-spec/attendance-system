@@ -13,7 +13,7 @@ module.exports = async function (fastify, opts) {
     try {
       // 1. Fetch user from DB (Primary check)
       const { rows } = await query(
-        'SELECT id, password_hash, role, status, device_fingerprint, first_name, last_name FROM users WHERE email = $1',
+        'SELECT id, password_hash, role, status, device_fingerprint, first_name, last_name, avatar_url FROM users WHERE email = $1',
         [email]
       );
       if (!rows.length) return reply.status(401).send({ error: 'Invalid credentials' });
@@ -43,8 +43,9 @@ module.exports = async function (fastify, opts) {
           id: user.id,
           email,
           role: user.role,
-          firstName: user.first_name,
-          lastName: user.last_name
+          first_name: user.first_name,
+          last_name: user.last_name,
+          avatar_url: user.avatar_url
         }
       });
     } catch (err) {

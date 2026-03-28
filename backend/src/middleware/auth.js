@@ -21,7 +21,7 @@ const authenticate = async (request, reply) => {
     } else {
       // 3. Cache Miss: PostgreSQL query
       const { rows } = await query(
-        'SELECT id, email, role, status, device_fingerprint FROM users WHERE id = $1',
+        'SELECT id, email, role, status, device_fingerprint, first_name, last_name, avatar_url FROM users WHERE id = $1',
         [userId]
       );
       if (!rows.length) {
