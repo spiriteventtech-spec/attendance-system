@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { usersAPI, authAPI, shiftsAPI, securityAPI } from '../services/api';
 import { Badge, Modal, Spinner, FilterInput, FilterSelect, ConfirmDialog, EmptyState, Skeleton } from '../components/ui';
-import { UserPlus, Search, Lock, Archive, Edit2, RotateCcw, Eye, Smartphone, Calendar } from 'lucide-react';
+import { UserPlus, Search, Lock, Archive, Edit2, RotateCcw, Eye, Smartphone, Calendar, UserCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
 
@@ -130,7 +130,8 @@ export default function StaffPage() {
       if (action === 'freeze')   await usersAPI.freeze(user.id, true);
       if (action === 'unfreeze') await usersAPI.freeze(user.id, false);
       if (action === 'archive')  await usersAPI.archive(user.id);
-      toast.success(`User ${action}d`);
+      if (action === 'recover')  await usersAPI.recover(user.id);
+      toast.success(`User ${action === 'recover' ? 'recovered' : action + 'd'}`);
       setConfirmAct(null);
       fetchUsers();
     } catch (err: any) {
@@ -257,6 +258,12 @@ export default function StaffPage() {
                           <button className="p-2 rounded-xl bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20 text-[#FF3B30] transition-colors" title="Archive"
                             onClick={() => setConfirmAct({ user: u, action: 'archive' })}>
                             <Archive className="w-4 h-4" />
+                          </button>
+                        )}
+                        {u.status === 'archived' && (
+                          <button className="p-2 rounded-xl bg-[#34C759]/10 hover:bg-[#34C759]/20 text-[#34C759] transition-colors" title="Recover Staff"
+                            onClick={() => setConfirmAct({ user: u, action: 'recover' })}>
+                            <UserCheck className="w-4 h-4" />
                           </button>
                         )}
                       </div>
@@ -435,10 +442,12 @@ export default function StaffPage() {
         onClose={() => setConfirmAct(null)}
         onConfirm={handleConfirm}
         loading={submitting}
-        title={confirmAct?.action === 'archive' ? 'Archive User' : confirmAct?.action === 'freeze' ? 'Freeze Account' : 'Unfreeze Account'}
+        title={confirmAct?.action === 'archive' ? 'Archive User' : confirmAct?.action === 'recover' ? 'Recover User' : confirmAct?.action === 'freeze' ? 'Freeze Account' : 'Unfreeze Account'}
         message={
           confirmAct?.action === 'archive'
             ? `Archive ${confirmAct?.user?.first_name} ${confirmAct?.user?.last_name}? They will be soft-deleted and cannot log in. Attendance data is preserved.`
+            : confirmAct?.action === 'recover'
+            ? `Restore ${confirmAct?.user?.first_name} ${confirmAct?.user?.last_name}'s account? They will be moved back to Active status and regain login access.`
             : confirmAct?.action === 'freeze'
             ? `Freeze ${confirmAct?.user?.first_name} ${confirmAct?.user?.last_name}'s account? They will be unable to log in until unfrozen.`
             : `Unfreeze ${confirmAct?.user?.first_name} ${confirmAct?.user?.last_name}'s account and restore login access?`

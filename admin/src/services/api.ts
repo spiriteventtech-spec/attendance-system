@@ -58,6 +58,8 @@ export const usersAPI = {
     api.post('/admin/users/freeze', { userId, freeze }),
   archive: (userId: string) =>
     api.post('/admin/users/archive', { userId }),
+  recover: (userId: string) =>
+    api.post('/admin/users/recover', { userId }),
   stats: (id: string) =>
     api.get(`/admin/users/${id}/stats`),
 };

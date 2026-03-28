@@ -250,7 +250,7 @@ router.get('/live', authenticate, async (req, res) => {
       JOIN users u ON u.id = al.user_id
       JOIN projects_sites ps ON ps.id = al.site_id
       LEFT JOIN location_pings lp ON lp.user_id = al.user_id
-      WHERE al.status = 'active'
+      WHERE al.status = 'active' AND u.status = 'active'
       ORDER BY al.user_id, lp.pinged_at DESC NULLS LAST
     `);
     res.json(rows);

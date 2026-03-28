@@ -419,4 +419,18 @@ router.post('/reset-password', authenticate, requireAdmin, [
   }
 });
 
+// ── POST /api/admin/users/recover ───────────────────────────
+router.post('/recover', authenticate, requireAdmin, async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'User ID is required' });
+
+  try {
+    const { rowCount } = await query('UPDATE users SET status = \'active\', updated_at = NOW() WHERE id = $1', [userId]);
+    if (!rowCount) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'User recovered successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
