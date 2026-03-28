@@ -14,7 +14,7 @@ const redisClient = require('./config/redis');
 // ── Plugins ──────────────────────────────────────────────────
 fastify.register(require('@fastify/helmet'), { global: true });
 fastify.register(require('@fastify/cors'), {
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['*'],
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-ID', 'X-Nonce', 'X-Timestamp'],
   credentials: true
