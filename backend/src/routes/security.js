@@ -185,8 +185,32 @@ router.post('/checkin-selfie', authenticate, [
     });
 
     const response = await rekognition.send(command);
+    
+    // Check if at least one face was detected and matched
     const match = response.FaceMatches?.[0];
-    const confidence = match?.Similarity ?? 0;
+    const faceCount = response.SourceImageFace?.BoundingBox ? 1 : (response.UnmatchedFaces?.length || 0);
+    
+    if (!match) {
+      await logSecurityEvent({
+        userId: req.user.id,
+        eventType: 'selfie_fail',
+        severity: 'critical',
+        detail: { 
+          reason: response.UnmatchedFaces?.length > 0 ? 'no_match' : 'no_face_detected',
+          threshold: CONFIDENCE_THRESHOLD 
+        },
+        ipAddress: req.ip,
+      });
+      return res.status(403).json({ 
+        passed: false, 
+        error: 'SELFIE_MISMATCH',
+        message: response.UnmatchedFaces?.length > 0 
+          ? 'Face mismatch. Please ensure you are taking a clear selfie of yourself.' 
+          : 'No valid human face detected in the selfie.' 
+      });
+    }
+
+    const confidence = match.Similarity ?? 0;
     const passed = confidence >= CONFIDENCE_THRESHOLD;
 
     if (!passed) {
@@ -197,20 +221,34 @@ router.post('/checkin-selfie', authenticate, [
         detail: { confidence, threshold: CONFIDENCE_THRESHOLD },
         ipAddress: req.ip,
       });
+      return res.status(403).json({ passed: false, confidence: parseFloat(confidence.toFixed(2)), threshold: CONFIDENCE_THRESHOLD });
     }
 
-    res.json({ passed, confidence: parseFloat(confidence.toFixed(2)), threshold: CONFIDENCE_THRESHOLD });
+    res.json({ passed: true, confidence: parseFloat(confidence.toFixed(2)), threshold: CONFIDENCE_THRESHOLD });
   } catch (err) {
     console.error('Selfie verification error:', err);
-    // Don't block check-in on Rekognition errors — log and pass through
+    
+    let errorMessage = 'Verification service error';
+    let eventType = 'selfie_error';
+    
+    if (err.name === 'InvalidParameterException' || err.message.includes('Face not found')) {
+      errorMessage = 'No human face detected in the image. Please try again.';
+      eventType = 'selfie_fail';
+    }
+
     await logSecurityEvent({
       userId: req.user.id,
-      eventType: 'selfie_error',
-      severity: 'medium',
-      detail: { error: err.message },
+      eventType: eventType,
+      severity: eventType === 'selfie_fail' ? 'high' : 'medium',
+      detail: { error: err.message, code: err.name },
       ipAddress: req.ip,
     });
-    res.json({ passed: true, skipped: true, message: 'Verification service error — check-in permitted' });
+
+    res.status(400).json({ 
+      passed: false, 
+      error: eventType === 'selfie_fail' ? 'NO_FACE_DETECTED' : 'SERVICE_ERROR',
+      message: errorMessage 
+    });
   }
 });
 

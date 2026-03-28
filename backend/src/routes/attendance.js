@@ -57,11 +57,12 @@ router.post('/checkin', authenticate, [
     const shiftId = shiftCheck.rows[0]?.id || null;
 
     // 4. Create attendance log
+    const deviceId = req.headers['x-device-id'] || 'unknown';
     const { rows } = await query(`
-      INSERT INTO attendance_logs (user_id, site_id, shift_id, check_in_time, check_in_note, status)
-      VALUES ($1, $2, $3, NOW(), $4, 'active')
+      INSERT INTO attendance_logs (user_id, site_id, shift_id, check_in_time, check_in_note, status, device_id)
+      VALUES ($1, $2, $3, NOW(), $4, 'active', $5)
       RETURNING id, check_in_time, check_in_note, status
-    `, [req.user.id, siteId, shiftId, note]);
+    `, [req.user.id, siteId, shiftId, note, deviceId]);
 
     // Update shift status if linked
     if (shiftId) {
@@ -93,9 +94,11 @@ router.post('/checkout', authenticate, [
   try {
     // 1. Find active session
     const { rows: logRows } = await query(`
-      SELECT al.*, ps.radius_meters, ps.location, ps.latitude as site_lat, ps.longitude as site_lng
+      SELECT al.*, ps.radius_meters, ps.location, ps.latitude as site_lat, ps.longitude as site_lng,
+             u.device_fingerprint as current_registered_device
       FROM attendance_logs al
       JOIN projects_sites ps ON ps.id = al.site_id
+      JOIN users u ON u.id = al.user_id
       WHERE al.user_id = $1 AND al.status = 'active'
     `, [req.user.id]);
 
@@ -103,6 +106,16 @@ router.post('/checkout', authenticate, [
       return res.status(400).json({ error: 'No active check-in found' });
 
     const log = logRows[0];
+    const currentDeviceId = req.headers['x-device-id'];
+
+    // 1.1 Verify device binding for this specific session
+    // This prevents "Login on A -> Checkin -> Login on B -> Checkout"
+    if (log.device_id && log.device_id !== 'unknown' && log.device_id !== currentDeviceId) {
+      return res.status(403).json({
+        error: 'DEVICE_MISMATCH',
+        message: 'You must check out from the same device used for check-in.'
+      });
+    }
 
     // Use current lat/lng or fallback to site location for breach closing
     const finalLat = latitude !== undefined && latitude !== null ? latitude : log.site_lat;
