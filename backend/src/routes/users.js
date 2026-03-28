@@ -369,4 +369,54 @@ router.delete('/sites/:id', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
+// ── POST /api/admin/users/archive ───────────────────────────
+router.post('/archive', authenticate, requireAdmin, async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'User ID is required' });
+  if (userId === req.user.id) return res.status(400).json({ error: 'You cannot archive your own account' });
+
+  try {
+    const { rowCount } = await query('UPDATE users SET status = \'archived\', updated_at = NOW() WHERE id = $1', [userId]);
+    if (!rowCount) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'User archived successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── POST /api/admin/users/freeze ────────────────────────────
+router.post('/freeze', authenticate, requireAdmin, async (req, res) => {
+  const { userId, freeze } = req.body;
+  if (!userId) return res.status(400).json({ error: 'User ID is required' });
+  if (userId === req.user.id) return res.status(400).json({ error: 'You cannot freeze your own account' });
+
+  try {
+    const status = freeze ? 'frozen' : 'active';
+    const { rowCount } = await query('UPDATE users SET status = $1, updated_at = NOW() WHERE id = $2', [status, userId]);
+    if (!rowCount) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: `User status updated to ${status}` });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── POST /api/admin/users/reset-password ─────────────────────
+router.post('/reset-password', authenticate, requireAdmin, [
+  body('userId').isUUID().withMessage('Valid User ID is required'),
+  body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
+
+  const { userId, newPassword } = req.body;
+  try {
+    const hash = await bcrypt.hash(newPassword, 12);
+    const { rowCount } = await query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [hash, userId]);
+    if (!rowCount) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'Password reset successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
