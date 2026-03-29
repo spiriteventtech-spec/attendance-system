@@ -11,6 +11,7 @@ const authenticate = async (request, reply) => {
     // 1. Verify JWT (Fastify-JWT adds user to request.user by default, but we'll manually handle sub)
     const decoded = await request.jwtVerify();
     const userId = decoded.sub;
+    const tokenSessionId = decoded.session_id;
 
     // 2. Performance: Try Redis Cache first (sub-millisecond)
     let userStr = await redis.get(`session:${userId}`);
@@ -31,6 +32,18 @@ const authenticate = async (request, reply) => {
 
       // 4. Hydrate Redis (1-hour cache TTL)
       await redis.set(`session:${userId}`, JSON.stringify(user), 'EX', 3600);
+    }
+
+    // 4.5 Terminate Old Session Check (Zero Trust)
+    if (user.session_id && tokenSessionId && user.session_id !== tokenSessionId) {
+      await logSecurityEvent({
+        userId: user.id,
+        eventType: 'session_terminated',
+        severity: 'info',
+        detail: { reason: 'older_session_killed_by_new_login' },
+        ipAddress: request.ip,
+      });
+      return reply.status(401).send({ error: 'SESSION_TERMINATED', message: 'You have been logged out because your account was accessed on another device.' });
     }
 
     // 5. Hard Block Checks

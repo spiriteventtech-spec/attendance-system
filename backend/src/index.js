@@ -10,6 +10,7 @@ const path = require('path');
 const { Server } = require('socket.io');
 const { createAdapter } = require('@socket.io/redis-adapter');
 const redisClient = require('./config/redis');
+const { connectProducer } = require('./utils/kafka');
 
 // ── Plugins ──────────────────────────────────────────────────
 fastify.register(require('@fastify/helmet'), { global: true });
@@ -86,7 +87,6 @@ io.on('connection', (socket) => {
 });
 
 // ── Cron & Cleanup Tasks ─────────────────────────────────────
-const { pruneExpiredNonces } = require('./middleware/replayProtection');
 const { checkLateShifts, markAbsences } = require('./cron/shiftWatcher');
 const { initWeeklyReportCron } = require('./cron/weeklyReport');
 
@@ -101,8 +101,10 @@ const start = async () => {
     console.log(`   INFLUXDB: Ready (GPS Time-Series Sink)`);
     console.log(`   SOCKET.IO: Redis Adapter Ready\n`);
 
+    // ── Kafka Initialization ─────────────────────────────────
+    await connectProducer();
+
     // Initialization Logic
-    setInterval(pruneExpiredNonces, 5 * 60 * 1000);
     setInterval(checkLateShifts, 5 * 60 * 1000);
     setInterval(markAbsences, 60 * 60 * 1000);
     initWeeklyReportCron();

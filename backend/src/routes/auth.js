@@ -6,9 +6,20 @@ const { logSecurityEvent } = require('../utils/securityLogger');
 
 module.exports = async function (fastify, opts) {
 
+  // ── GET /api/nonce ──────────────────────────────────────────
+  // Nonce generation for replay protection.
+  // This endpoint is rate-limited but open to authenticated and unauthenticated users 
+  // to support login and check-in flows.
+  fastify.get('/nonce', async (request, reply) => {
+    const { generateNonce } = require('../utils/security');
+    const userId = request.headers['x-user-id'] || 'anonymous'; // Fallback for login
+    const nonce = await generateNonce(userId);
+    reply.send({ nonce });
+  });
+
   // ── POST /api/login ──────────────────────────────────────────
   fastify.post('/login', async (request, reply) => {
-    const { email, password, deviceId, biometricKey } = request.body;
+    const { email, password, deviceId } = request.body;
 
     try {
       // 1. Fetch user from DB (Primary check)
@@ -25,16 +36,42 @@ module.exports = async function (fastify, opts) {
       const match = await bcrypt.compare(password, user.password_hash);
       if (!match) return reply.status(401).send({ error: 'Invalid credentials' });
 
-      // 3. Device Binding Enforcement (Performance optimization: checked globally via redis later)
-      if (user.device_fingerprint && deviceId && user.device_fingerprint !== deviceId) {
-         return reply.status(403).send({ error: 'DEVICE_MISMATCH', message: 'Unauthorized device.' });
+      // 3. ZERO-TRUST: Strict Device Binding Enforcement
+      // If the account is already bound to a hardware ID, reject any other device.
+      if (process.env.ENFORCE_DEVICE_BINDING === 'true' && user.device_fingerprint) {
+         if (!deviceId || user.device_fingerprint !== deviceId) {
+            await logSecurityEvent({
+              userId: user.id,
+              eventType: 'device_mismatch',
+              severity: 'critical',
+              detail: { provided: deviceId, expected: user.device_fingerprint, platform: 'web/mobile' },
+              ipAddress: request.ip
+            });
+            return reply.status(403).send({ 
+              error: 'DEVICE_MISMATCH', 
+              message: 'Your account is bound to another physical device. Please contact administration to reset your binding.' 
+            });
+         }
       }
 
-      // 4. Generate JWT
-      const token = fastify.jwt.sign({ sub: user.id, role: user.role });
+      // 3.5. Multi-Device Policy Check
+      const sessionPolicy = await redis.get('config:session_policy') || 'block_new';
+      const existingSession = await redis.get(`session:${user.id}`);
+      
+      if (existingSession && sessionPolicy === 'block_new') {
+        const parsed = JSON.parse(existingSession);
+        if (parsed.device_fingerprint && parsed.device_fingerprint !== deviceId) {
+           return reply.status(403).send({ error: 'SESSION_ACTIVE', message: 'You are already logged in on another device. Please logout there first or contact admin to reset your device.' });
+        }
+      }
+
+      // 4. Generate JWT with pinned session_id for Terminate Old Session feature
+      const crypto = require('crypto');
+      const sessionId = crypto.randomUUID();
+      const token = fastify.jwt.sign({ sub: user.id, role: user.role, session_id: sessionId });
 
       // 5. CACHE SESSION: Sub-millisecond hydration in Redis 7
-      // We store the full user object to avoid subsequent DB lookups in auth middleware
+      user.session_id = sessionId;
       await redis.set(`session:${user.id}`, JSON.stringify(user), 'EX', 3600);
 
       reply.send({
@@ -45,7 +82,8 @@ module.exports = async function (fastify, opts) {
           role: user.role,
           first_name: user.first_name,
           last_name: user.last_name,
-          avatar_url: user.avatar_url
+          avatar_url: user.avatar_url,
+          is_bound: !!user.device_fingerprint
         }
       });
     } catch (err) {

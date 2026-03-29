@@ -68,7 +68,7 @@ api.interceptors.request.use(async (config) => {
   const token = await SecureStore.getItemAsync('auth_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
-  // 2. Device Fingerprint (X-Device-ID)
+  // 2. Device Fingerprint (X-Device-ID) - Required for ALL requests
   try {
     const deviceId = await getOrCreateDeviceFingerprint();
     config.headers['X-Device-ID'] = deviceId;
@@ -76,18 +76,25 @@ api.interceptors.request.use(async (config) => {
     console.warn('[API] Could not inject device fingerprint:', e.message);
   }
 
-  // 3. Replay Protection (X-Nonce + X-Timestamp) for mutation requests
+  // 3. ZERO-TRUST: Stateful Nonce Replay Protection for mutation requests
   const mutationMethods = ['post', 'put', 'delete', 'patch'];
-  if (mutationMethods.includes(config.method?.toLowerCase())) {
+  const isMutation = mutationMethods.includes(config.method?.toLowerCase());
+  
+  // Skip nonce for the /nonce request itself to avoid infinite loops
+  if (isMutation && !config.url.endsWith('/nonce')) {
     try {
-      const userId = await SecureStore.getItemAsync('user_id');
-      if (userId) {
-        const { nonce, timestamp } = await generateNonce(userId);
-        config.headers['X-Nonce'] = nonce;
-        config.headers['X-Timestamp'] = timestamp;
+      const userId = (await SecureStore.getItemAsync('user_id')) || 'anonymous';
+      
+      // Fetch a fresh "burn-after-reading" nonce from the server
+      const { data } = await axios.get(`${BASE_URL}/api/nonce`, {
+        headers: { 'X-User-ID': userId }
+      });
+      
+      if (data.nonce) {
+        config.headers['X-Nonce'] = data.nonce;
       }
     } catch (e) {
-      console.warn('[API] Could not inject nonce:', e.message);
+      console.error('[API] Failed to fetch security nonce. Mutation may be rejected by server.', e.message);
     }
   }
 
@@ -120,7 +127,7 @@ api.interceptors.response.use(
 
 // ── API Modules ───────────────────────────────────────────────────────────────
 export const authAPI = {
-  login: (email, password) => api.post('/login', { email, password }),
+  login: (email, password, deviceId) => api.post('/login', { email, password, deviceId }),
   me: () => api.get('/me'),
   changePassword: (currentPassword, newPassword) =>
     api.post('/change-password', { currentPassword, newPassword }),

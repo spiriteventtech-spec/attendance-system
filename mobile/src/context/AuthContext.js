@@ -43,7 +43,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const { data } = await authAPI.login(email, password);
+    const deviceId = await getOrCreateDeviceFingerprint();
+    const { data } = await authAPI.login(email, password, deviceId);
     
     // Persist credentials
     await SecureStore.setItemAsync('auth_token', data.token);

@@ -17,9 +17,35 @@ module.exports = async function (fastify, opts) {
 
   // ── GET /api/security/status ──────────────────────────────────
   fastify.get('/status', { preHandler: [authenticate, requireAdmin] }, async () => ({
-    awsRekognition: { enabled: !!rekognition, region: process.env.AWS_REGION || 'not-set' },
+    awsRekognition: { enabled: !!rekognition, confidenceThreshold: 80 },
+    smtp: { enabled: !!process.env.SMTP_HOST, host: process.env.SMTP_HOST || 'None' },
     system: { version: 'ZT-FASTIFY-2.1', uptime: process.uptime() }
   }));
+
+  // ── GET /api/security/session-policy ────────────────────────
+  fastify.get('/session-policy', { preHandler: [authenticate, requireAdmin] }, async () => {
+    const policy = await redis.get('config:session_policy') || 'block_new';
+    return { policy };
+  });
+
+  // ── PUT /api/security/session-policy ────────────────────────
+  fastify.put('/session-policy', { preHandler: [authenticate, requireAdmin] }, async (request, reply) => {
+    const { policy } = request.body;
+    if (policy !== 'block_new' && policy !== 'terminate_old') return reply.status(400).send({ error: 'Invalid policy' });
+    await redis.set('config:session_policy', policy);
+    return { message: 'Policy updated', policy };
+  });
+
+  // ── DELETE /api/security/users/:id/device ───────────────────
+  fastify.delete('/users/:id/device', { preHandler: [authenticate, requireAdmin] }, async (request, reply) => {
+    try {
+      await query('UPDATE users SET device_fingerprint = NULL WHERE id = $1', [request.params.id]);
+      await redis.del(`session:${request.params.id}`); // Force re-auth
+      reply.send({ message: 'Device reset' });
+    } catch {
+      reply.status(500).send({ error: 'Failed' });
+    }
+  });
 
   // ── POST /api/security/register-device ────────────────────────
   fastify.post('/register-device', { preHandler: [authenticate] }, async (request, reply) => {

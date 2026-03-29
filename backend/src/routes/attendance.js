@@ -9,6 +9,14 @@ module.exports = async function (fastify, opts) {
   fastify.post('/checkin', { preHandler: [authenticate] }, async (request, reply) => {
     const { siteId, latitude, longitude, note } = request.body;
     const userId = request.user.id;
+    const nonce = request.headers['x-nonce'];
+
+    // 0. ZERO-TRUST: Replay Protection (Burn-after-reading Nonce)
+    const { verifyAndConsumeNonce } = require('../utils/security');
+    const isValidNonce = await verifyAndConsumeNonce(userId, nonce);
+    if (!isValidNonce) {
+      return reply.status(403).send({ error: 'INVALID_NONCE', message: 'Stale or replayed request detected. Please refresh and try again.' });
+    }
 
     try {
       // 1. Geofence Check (PostGIS)
@@ -32,8 +40,19 @@ module.exports = async function (fastify, opts) {
         RETURNING id, check_in_time, site_id
       `, [userId, siteId, note || null, latitude, longitude]);
 
-      // 4. PERFORMANCE: Sync session status to Redis for sub-millisecond status check
-      await redis.set(`active_session:${userId}`, JSON.stringify({ log_id: log[0].id, site_id: siteId }), 'EX', 43200); // 12h
+      // 4. PERFORMANCE: Sync session status to Redis
+      await redis.set(`active_session:${userId}`, JSON.stringify({ log_id: log[0].id, site_id: siteId }), 'EX', 43200);
+
+      // 5. EVENT-DRIVEN: Publish to Kafka for Notification & Analytics Services
+      const { publishEvent } = require('../utils/kafka');
+      await publishEvent('attendance_events', {
+        type: 'checkin',
+        userId,
+        logId: log[0].id,
+        siteId,
+        siteName: sites[0].name,
+        timestamp: new Date().toISOString()
+      });
 
       reply.status(201).send({ message: 'Checked in successfully', log: log[0] });
     } catch (err) {
@@ -46,17 +65,24 @@ module.exports = async function (fastify, opts) {
   fastify.post('/checkout', { preHandler: [authenticate] }, async (request, reply) => {
     const { latitude, longitude, note } = request.body;
     const userId = request.user.id;
+    const nonce = request.headers['x-nonce'];
+
+    // 0. ZERO-TRUST: Replay Protection
+    const { verifyAndConsumeNonce } = require('../utils/security');
+    const isValidNonce = await verifyAndConsumeNonce(userId, nonce);
+    if (!isValidNonce) {
+      return reply.status(403).send({ error: 'INVALID_NONCE', message: 'Stale or replayed request detected.' });
+    }
 
     try {
       // 1. PERFORMANCE: Check Redis first
       const sessionStr = await redis.get(`active_session:${userId}`);
       if (!sessionStr) {
-        // Fallback to DB
         const { rows } = await query('SELECT id FROM attendance_logs WHERE user_id = $1 AND status = \'active\'', [userId]);
         if (!rows.length) return reply.status(404).send({ error: 'No active session found' });
       }
 
-      // 2. Transasction: Close session and calculate duration
+      // 2. Transaction: Close session and calculate duration
       const { rows: closed } = await query(`
         UPDATE attendance_logs
         SET check_out_time = NOW(),
@@ -66,11 +92,22 @@ module.exports = async function (fastify, opts) {
             status = 'completed',
             total_hours_worked = EXTRACT(EPOCH FROM (NOW() - check_in_time))/3600
         WHERE user_id = $1 AND status = 'active'
-        RETURNING id, total_hours_worked
+        RETURNING id, total_hours_worked, site_id
       `, [userId, note || null, latitude, longitude]);
 
-      // 3. CACHE INVALIDATION: Remove active session from Redis
+      // 3. CACHE INVALIDATION
       await redis.del(`active_session:${userId}`);
+
+      // 4. EVENT-DRIVEN: Publish to Kafka
+      const { publishEvent } = require('../utils/kafka');
+      await publishEvent('attendance_events', {
+        type: 'checkout',
+        userId,
+        logId: closed[0].id,
+        siteId: closed[0].site_id,
+        timestamp: new Date().toISOString(),
+        durationHours: closed[0].total_hours_worked
+      });
 
       reply.send({ message: 'Checked out successfully', log: closed[0] });
     } catch (err) {
